@@ -44,15 +44,21 @@ const declareProjectFile = (
   parserMaps.imports.set(sourceFile.hash, imports);
 };
 
-export const parse = async (config: Config) => {
+/**
+ * Parses a TypeScript project starting from the entry point specified in the configuration
+ * Traverses the project's file structure, collecting files, nodes, and their relationships
+ * @param {Config} config - Configuration object containing project settings and entry point
+ * @returns {Promise<ParserMaps>} Parser maps containing collected files, nodes, and relationships
+ */
+export const parse = async (config: Config): Promise<ParserMaps> => {
   logger.info("Begin parsing project...", "parse");
   const start = performance.now();
   const parserMaps = initParserMaps();
   const entryFile = await parseSourceFile(config.entryPoint, config);
 
   if (!entryFile) {
-    logger.error("Entry file not found", "parse");
-    return;
+    logger.error("Entry file not found, aborting", "parse");
+    return parserMaps;
   }
   const projectFiles = await parseProjectFile(entryFile, config, new Set());
   projectFiles.forEach((projectFile) => {
@@ -64,4 +70,5 @@ export const parse = async (config: Config) => {
   logger.info(parserMaps.nodes.size, "nodes parsed");
   logger.info(parserMaps.fileNodes.size, "file nodes parsed");
   logger.info(parserMaps.imports.size, "imports parsed");
+  return parserMaps;
 };

@@ -16,6 +16,7 @@ const defaultConfig: DefaultConfig = {
   resolveFileNodes: true,
   resolveImportedModules: true,
   skipNodeModules: true,
+  verbose: false,
 };
 
 /**
@@ -30,6 +31,7 @@ const validateConfig = ({
   resolveFileNodes,
   resolveImportedModules,
   skipNodeModules,
+  verbose,
 }: DefaultConfig): DeepNonNullish<DefaultConfig> => {
   if (!isString(projectRoot)) {
     throw new Error("projectRoot is required");
@@ -46,12 +48,16 @@ const validateConfig = ({
   if (!isBoolean(skipNodeModules)) {
     throw new Error("skipNodeModules must be a boolean");
   }
+  if (!isBoolean(verbose)) {
+    throw new Error("verbose must be a boolean");
+  }
   return {
     entryPoint,
     projectRoot,
     resolveFileNodes,
     resolveImportedModules,
     skipNodeModules,
+    verbose,
   };
 };
 
