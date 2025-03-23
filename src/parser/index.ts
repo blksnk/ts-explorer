@@ -45,6 +45,8 @@ const declareProjectFile = (
 };
 
 export const parse = async (config: Config) => {
+  logger.info("Begin parsing project...", "parse");
+  const start = performance.now();
   const parserMaps = initParserMaps();
   const entryFile = await parseSourceFile(config.entryPoint, config);
 
@@ -52,10 +54,14 @@ export const parse = async (config: Config) => {
     logger.error("Entry file not found", "parse");
     return;
   }
-  const projectFiles = await parseProjectFile(entryFile, config);
+  const projectFiles = await parseProjectFile(entryFile, config, new Set());
   projectFiles.forEach((projectFile) => {
     declareProjectFile(parserMaps, projectFile);
   });
-  logger.warn(parserMaps);
-  // logger.debug(sourceFile?.nodes);
+  const end = performance.now();
+  logger.info(`Parsing project took ${end - start}ms`, "parse");
+  logger.info(parserMaps.files.size, "files parsed");
+  logger.info(parserMaps.nodes.size, "nodes parsed");
+  logger.info(parserMaps.fileNodes.size, "file nodes parsed");
+  logger.info(parserMaps.imports.size, "imports parsed");
 };

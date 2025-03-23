@@ -17,18 +17,23 @@ import { logger } from "../utils";
  */
 export const parseProjectFile = async (
   sourceFile: Nullable<SourceFile>,
-  config: Config
+  config: Config,
+  collectedHashes: Set<FileHash>
 ): Promise<ProjectFile[]> => {
   if (!sourceFile) {
     return [];
   }
+
+  logger.info(
+    `Parsing project file ${sourceFile.file.fileName}...`,
+    "parseProjectFile"
+  );
+  // add current file to collected hashes to avoid circular dependencies
+  collectedHashes.add(sourceFile.hash);
   // resolve imported modules names to their full file paths
   const resolvedModules = sourceFile.info.importedFiles
     .map(({ fileName }) => resolveImportedModule(sourceFile, fileName, config))
     .filter(isObject as Predicate<ResolvedModule>);
-
-  logger.debug(`resolving project file ${sourceFile.file.fileName}`);
-
   // if no imported modules or disabled, return the source file
   if (!resolvedModules.length || !config.resolveImportedModules) {
     return [
@@ -42,21 +47,36 @@ export const parseProjectFile = async (
   const imports: FileHash[] = [];
   const importedFiles = await Promise.all(
     resolvedModules.map(async (resolvedModule) => {
+      // skip external library imports if configured
       if (config.skipNodeModules && resolvedModule.isExternalLibraryImport) {
-        logger.debug(
+        logger.info(
           `Skipping external library import ${resolvedModule.resolvedFileName}`,
           "parseProjectFile"
         );
         return [];
       }
+      // parse imported file
       const importedFile = await parseSourceFile(
         resolvedModule.resolvedFileName,
         config
       );
+      // if file is parsed, add it to the imports and check for circular dependencies
       if (importedFile) {
+        // mark this file as an import of the current file
         imports.push(importedFile.hash);
+        // if file is already parsed, skip it
+        if (collectedHashes.has(importedFile.hash)) {
+          logger.info(
+            `Skipping already parsed file ${importedFile.file.fileName}`,
+            "parseProjectFile"
+          );
+          return [];
+        }
+        // add imported file to collected hashes to avoid circular dependencies
+        collectedHashes.add(importedFile.hash);
       }
-      return await parseProjectFile(importedFile, config);
+      // recursively parse imported file if not already parsed
+      return await parseProjectFile(importedFile, config, collectedHashes);
     })
   );
 

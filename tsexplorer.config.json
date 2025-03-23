@@ -3,5 +3,5 @@
   "projectRoot": "../../missions/front-tokens",
   "resolveFileNodes": true,
   "resolveImportedModules": true,
-  "skipNodeModules": true
+  "skipNodeModules": false
 }
