@@ -1,18 +1,17 @@
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, text } from "drizzle-orm/pg-core";
+import { project } from "./project.schema";
+import { fileHash, timestamps } from "../dataTypes";
+import { relations } from "drizzle-orm";
 
 export const file = pgTable("files", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   path: text().notNull(),
   name: text().notNull(),
-  hash: text().notNull(),
-  createdAt: timestamp().notNull().defaultNow(),
-  updatedAt: timestamp().notNull().defaultNow(),
+  hash: fileHash.notNull(),
+  projectId: integer("project_id").references(() => project.id),
+  ...timestamps,
 });
 
-export const fileImport = pgTable("file_imports", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  fromFileId: integer().references(() => file.id),
-  toFileId: integer().references(() => file.id),
-  createdAt: timestamp().notNull().defaultNow(),
-  updatedAt: timestamp().notNull().defaultNow(),
-});
+export const projectFiles = relations(file, ({ one }) => ({
+  projectId: one(project),
+}));
