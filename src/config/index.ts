@@ -102,7 +102,7 @@ const parseTsConfig = async (
 export const parseConfig = async (): Promise<Config> => {
   const config = validateConfig({
     ...defaultConfig,
-    ...(jsonConfig as JsonConfig),
+    ...((jsonConfig ?? {}) as JsonConfig),
   });
 
   const tsConfigPath =
