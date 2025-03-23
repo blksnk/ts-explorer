@@ -1,0 +1,7 @@
+{
+  "entryPoint": "../../missions/front-tokens/src/scripts/generate.ts",
+  "projectRoot": "../../missions/front-tokens",
+  "resolveFileNodes": true,
+  "resolveImportedModules": true,
+  "skipNodeModules": true
+}
