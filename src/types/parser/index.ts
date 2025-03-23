@@ -1,3 +1,4 @@
+import type { Nullable } from "@ubloimmo/front-util";
 import * as ts from "typescript";
 
 export type Hash = string;
@@ -7,6 +8,11 @@ export type NodeHash = Hash;
 export type SourceNode = {
   node: ts.Node;
   hash: NodeHash;
+  start: number;
+  end: number;
+  text: string;
+  parentHash: Nullable<NodeHash>;
+  kind: ts.SyntaxKind;
 };
 
 export type SourceFile = {

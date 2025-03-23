@@ -1,7 +1,7 @@
 import * as ts from "typescript";
 import * as bun from "bun";
-import { hashFile, logger } from "../utils";
-import type { Nullable } from "@ubloimmo/front-util";
+import { hashFile, hashNode, logger } from "../utils";
+import type { Nullable, Optional } from "@ubloimmo/front-util";
 import type { Config, ResolvedModule, SourceFile, SourceNode } from "../types";
 import { visitNode } from "./node.parser";
 
@@ -12,9 +12,14 @@ import { visitNode } from "./node.parser";
  */
 const getSourceFileNodes = (file: ts.SourceFile): SourceNode[] => {
   const nodes: SourceNode[] = [];
+  let rootNodeHashes: Optional<Set<string>> = new Set(
+    file.getChildren().map(hashNode)
+  );
   file.forEachChild((child) => {
-    nodes.push(...visitNode(child));
+    nodes.push(...visitNode(child, file, rootNodeHashes));
   });
+  // free memory
+  rootNodeHashes = undefined;
   return nodes;
 };
 

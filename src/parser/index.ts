@@ -1,13 +1,4 @@
-import type {
-  Config,
-  Hash,
-  NodeHash,
-  ParserMaps,
-  ProjectFile,
-  SourceFile,
-  SourceFileMap,
-  SourceNodeMap,
-} from "../types";
+import type { Config, NodeHash, ParserMaps, ProjectFile } from "../types";
 import { logger } from "../utils";
 import { parseSourceFile } from "./file.parser";
 import { parseProjectFile } from "./project.parser";
@@ -65,10 +56,10 @@ export const parse = async (config: Config): Promise<ParserMaps> => {
     declareProjectFile(parserMaps, projectFile);
   });
   const end = performance.now();
-  logger.info(`Parsing project took ${end - start}ms`, "parse");
-  logger.info(parserMaps.files.size, "files parsed");
-  logger.info(parserMaps.nodes.size, "nodes parsed");
-  logger.info(parserMaps.fileNodes.size, "file nodes parsed");
-  logger.info(parserMaps.imports.size, "imports parsed");
+  logger.info(`${end - start}ms`, "took");
+  logger.log(parserMaps.files.size, "files parsed");
+  logger.log(parserMaps.nodes.size, "nodes parsed");
+  logger.log(parserMaps.fileNodes.size, "file nodes parsed");
+  logger.log(parserMaps.imports.size, "imports parsed");
   return parserMaps;
 };

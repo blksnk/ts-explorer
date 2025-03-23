@@ -1,4 +1,9 @@
-import { isObject, type Nullable, type Predicate } from "@ubloimmo/front-util";
+import {
+  isObject,
+  type Nullable,
+  type Optional,
+  type Predicate,
+} from "@ubloimmo/front-util";
 import type {
   Config,
   FileHash,
@@ -24,7 +29,7 @@ export const parseProjectFile = async (
     return [];
   }
 
-  logger.info(
+  logger.log(
     `Parsing project file ${sourceFile.file.fileName}...`,
     "parseProjectFile"
   );
@@ -49,7 +54,7 @@ export const parseProjectFile = async (
     resolvedModules.map(async (resolvedModule) => {
       // skip external library imports if configured
       if (config.skipNodeModules && resolvedModule.isExternalLibraryImport) {
-        logger.info(
+        logger.log(
           `Skipping external library import ${resolvedModule.resolvedFileName}`,
           "parseProjectFile"
         );
@@ -66,7 +71,7 @@ export const parseProjectFile = async (
         imports.push(importedFile.hash);
         // if file is already parsed, skip it
         if (collectedHashes.has(importedFile.hash)) {
-          logger.info(
+          logger.log(
             `Skipping already parsed file ${importedFile.file.fileName}`,
             "parseProjectFile"
           );
@@ -81,7 +86,7 @@ export const parseProjectFile = async (
   );
 
   // create a map to store the project files
-  const resultMap = new Map<FileHash, ProjectFile>();
+  let resultMap: Optional<Map<FileHash, ProjectFile>> = new Map();
 
   // add the source file to the result map
   resultMap.set(sourceFile.hash, {
@@ -95,7 +100,10 @@ export const parseProjectFile = async (
       resultMap.set(importedFile.sourceFile.hash, importedFile);
     }
   }
-
+  // merge result to array
+  const result = Array.from(resultMap.values());
+  // free memory
+  resultMap = undefined;
   // return the flattened unique project files
-  return Array.from(resultMap.values());
+  return result;
 };

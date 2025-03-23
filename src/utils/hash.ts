@@ -28,5 +28,12 @@ export const hashFile = (fileName: string, fileContent: string) => {
  * @returns The hex-encoded SHA-256 hash of the node's text content
  */
 export const hashNode = (node: ts.Node) => {
-  return hash(node.getText());
+  const hashValues = [
+    node.kind,
+    node.getFullText(),
+    node.getStart(),
+    node.getEnd(),
+    node.flags,
+  ].join(":");
+  return hash(hashValues);
 };
