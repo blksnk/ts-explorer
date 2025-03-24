@@ -1,4 +1,9 @@
-import { isObject, type Nullable, type Predicate } from "@ubloimmo/front-util";
+import {
+  isArray,
+  isObject,
+  type Nullable,
+  type Predicate,
+} from "@ubloimmo/front-util";
 import type {
   AdapterType,
   Config,
@@ -17,6 +22,7 @@ import type {
   NodeOutput,
 } from "../../db/schema";
 import { indexFileImports } from "./fileImport.indexer";
+import { MAX_BATCH_SIZE } from "../indexer.constants";
 
 /**
  * Indexes all files in a project by inserting them into the database
@@ -70,21 +76,22 @@ const indexProjectNodes = async (
   );
   if (!projectNodes?.length) return [];
   // iterate through project nodes to update their parent nodes
-  await Promise.all(
-    projectNodes.map(async ({ id, hash }) => {
-      const parentHash = parserMaps.nodeParents.get(hash);
-      if (!parentHash) return;
-      const parentNodeId = projectNodes.find(
-        ({ hash }) => hash === parentHash
-      )?.id;
-      if (!parentNodeId) return;
-      return await indexNodeParent(id, parentNodeId);
-    })
-  );
-  logger.log(
-    `Wrote parent-child relationships for ${projectNodes.length} project nodes`,
-    "indexProjectNodes"
-  );
+  // await Promise.all(
+  //   projectNodes.map(async ({ id, hash }) => {
+  //     const parentHash = parserMaps.nodeParents.get(hash);
+  //     if (!parentHash) return false;
+  //     const parentNodeId = projectNodes.find(
+  //       ({ hash }) => hash === parentHash
+  //     )?.id;
+  //     if (!parentNodeId) return false;
+  //     await indexNodeParent(id, parentNodeId);
+  //     return true;
+  //   })
+  // );
+  // logger.log(
+  //   `Wrote parent-child relationships for ${projectNodes.length} project nodes`,
+  //   "indexProjectNodes"
+  // );
   return projectNodes;
 };
 
@@ -127,19 +134,19 @@ const indexProjectFileImports = async (
  * Indexes a project by creating database records for the project, its files, nodes and their relationships
  * @param {StaticConfig<AdapterType>} config - Configuration object containing project details and indexing options
  * @param {ParserMaps} parserMaps - Parser maps containing files, nodes and their relationships to index
- * @returns {Promise<void>} Nothing
+ * @returns {Promise<boolean>} True if indexing was successful, false otherwise
  */
 export const index = async (
   config: StaticConfig<AdapterType>,
   parserMaps: ParserMaps
-) => {
+): Promise<boolean> => {
   // index project
   const project = await indexProject(config);
 
   // return if project indexing failed
   if (!project) {
     logger.warn("Failed to index project, aborting", "index");
-    return;
+    return false;
   }
   logger.log(`Indexed project ${config.projectName} (${project.id})`, "index");
 
@@ -150,7 +157,7 @@ export const index = async (
   const projectFiles = await indexProjectFiles(project.id, parserMaps);
 
   // return if no files were indexed
-  if (!projectFiles?.length) return;
+  if (!projectFiles?.length) return true;
 
   // index project file imports
   if (config.resolveImportedModules) {
@@ -161,4 +168,5 @@ export const index = async (
   if (config.resolveFileNodes) {
     await indexProjectNodes(projectFiles, parserMaps);
   }
+  return true;
 };

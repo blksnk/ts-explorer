@@ -139,6 +139,10 @@ export const indexNodeParent = async (
   parentId: number
 ): Promise<Nullable<NodeOutput>> => {
   try {
+    logger.log(
+      `Indexing parent ${parentId} for node ${nodeId}`,
+      "indexNodeParent"
+    );
     const nodes = await db
       .update(schemas.node)
       .set({ parentId })
