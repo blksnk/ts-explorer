@@ -1,4 +1,10 @@
-import type { Config, NodeHash, ParserMaps, ProjectFile } from "../types";
+import type {
+  AdapterType,
+  Config,
+  NodeHash,
+  ParserMaps,
+  ProjectFile,
+} from "../types";
 import { logger } from "../utils";
 import { parseSourceFile } from "./file.parser";
 import { parseProjectFile } from "./project.parser";
@@ -13,6 +19,7 @@ const initParserMaps = (): ParserMaps => {
     nodes: new Map(),
     fileNodes: new Map(),
     imports: new Map(),
+    nodeParents: new Map(),
   };
 };
 
@@ -30,6 +37,7 @@ const declareProjectFile = (
   nodes.forEach((node) => {
     parserMaps.nodes.set(node.hash, node);
     nodeHashes.push(node.hash);
+    if (node.parentHash) parserMaps.nodeParents.set(node.hash, node.parentHash);
   });
   parserMaps.fileNodes.set(sourceFile.hash, nodeHashes);
   parserMaps.imports.set(sourceFile.hash, imports);
@@ -41,11 +49,11 @@ const declareProjectFile = (
  * @param {Config} config - Configuration object containing project settings and entry point
  * @returns {Promise<ParserMaps>} Parser maps containing collected files, nodes, and relationships
  */
-export const parse = async (config: Config): Promise<ParserMaps> => {
+export const parse = async (config: Config<"local">): Promise<ParserMaps> => {
   logger.info("Begin parsing project...", "parse");
   const start = performance.now();
   const parserMaps = initParserMaps();
-  const entryFile = await parseSourceFile(config.entryPoint, config);
+  const entryFile = await parseSourceFile(config.adapter.entryPoint, config);
 
   if (!entryFile) {
     logger.error("Entry file not found, aborting", "parse");
@@ -61,5 +69,11 @@ export const parse = async (config: Config): Promise<ParserMaps> => {
   logger.log(parserMaps.nodes.size, "nodes parsed");
   logger.log(parserMaps.fileNodes.size, "file nodes parsed");
   logger.log(parserMaps.imports.size, "imports parsed");
+  console.log(
+    parserMaps.files.get(projectFiles[1].sourceFile.hash)?.file.moduleName
+  );
+  console.log(
+    parserMaps.files.get(projectFiles[1].sourceFile.hash)?.file.fileName
+  );
   return parserMaps;
 };

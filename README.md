@@ -13,3 +13,7 @@ To run:
 ```bash
 bun run index.ts
 ```
+
+## Graphing lib candidates
+
+- [React flow](https://reactflow.dev/)

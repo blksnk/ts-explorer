@@ -2,7 +2,14 @@ import * as ts from "typescript";
 import * as bun from "bun";
 import { hashFile, hashNode, logger } from "../utils";
 import type { Nullable, Optional } from "@ubloimmo/front-util";
-import type { Config, ResolvedModule, SourceFile, SourceNode } from "../types";
+import type {
+  Config,
+  ParserConfig,
+  ResolvedModule,
+  SourceFile,
+  SourceNode,
+  TsConfig,
+} from "../types";
 import { visitNode } from "./node.parser";
 
 /**
@@ -33,7 +40,7 @@ const getSourceFileNodes = (file: ts.SourceFile): SourceNode[] => {
 export const resolveImportedModule = (
   sourceFile: SourceFile,
   moduleName: string,
-  config: Config
+  config: TsConfig
 ): Nullable<ResolvedModule> => {
   if (!config.tsConfig?.options) {
     logger.warn(
@@ -65,7 +72,7 @@ export const resolveImportedModule = (
 
 export const parseSourceFile = async (
   fileName: string,
-  config: Config
+  config: ParserConfig
 ): Promise<Nullable<SourceFile>> => {
   try {
     // get file handle

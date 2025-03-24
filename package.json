@@ -3,7 +3,11 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "parse": "bun src/index.ts"
+    "parse": "bun src/index.ts",
+    "db:generate": "bunx drizzle-kit generate",
+    "db:migrate": "bunx drizzle-kit migrate",
+    "db:push": "bunx drizzle-kit push",
+    "db:studio": "bunx drizzle-kit studio"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -14,6 +18,7 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",
+    "octokit": "^4.1.2",
     "pg": "^8.14.1",
     "tsx": "^4.19.3"
   }

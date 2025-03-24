@@ -7,9 +7,11 @@ import {
 import type {
   Config,
   FileHash,
+  ParserConfig,
   ProjectFile,
   ResolvedModule,
   SourceFile,
+  TsConfig,
 } from "../types";
 import { parseSourceFile, resolveImportedModule } from "./file.parser";
 import { logger } from "../utils";
@@ -22,7 +24,7 @@ import { logger } from "../utils";
  */
 export const parseProjectFile = async (
   sourceFile: Nullable<SourceFile>,
-  config: Config,
+  config: ParserConfig & TsConfig,
   collectedHashes: Set<FileHash>
 ): Promise<ProjectFile[]> => {
   if (!sourceFile) {

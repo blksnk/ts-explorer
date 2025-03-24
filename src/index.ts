@@ -1,10 +1,8 @@
 import "dotenv/config";
-import { parse } from "./parser";
-import { parseConfig } from "./config";
+import { adapter } from "./adapter";
 
 const main = async () => {
-  const config = await parseConfig();
-  await parse(config);
+  await adapter.local();
 };
 
 main();

@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1742723507496,
-      "tag": "0000_bright_daredevil",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1742741882795,
-      "tag": "0001_last_wendigo",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1742741938732,
-      "tag": "0002_equal_wonder_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1742742100816,
-      "tag": "0003_medical_thunderbolts",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1742742270030,
-      "tag": "0004_aspiring_emma_frost",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1742742482143,
-      "tag": "0005_unique_mantis",
+      "when": 1742744231067,
+      "tag": "0000_amused_satana",
       "breakpoints": true
     }
   ]

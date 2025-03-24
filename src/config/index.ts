@@ -1,22 +1,60 @@
-import type { JsonConfig, DefaultConfig, Config } from "../types";
+import type {
+  JsonConfig,
+  DefaultConfig,
+  StaticConfig,
+  AdapterType,
+} from "../types";
 import jsonConfig from "../../tsexplorer.config.json";
-import * as ts from "typescript";
 import {
   isBoolean,
   isString,
   type DeepNonNullish,
   type Nullable,
 } from "@ubloimmo/front-util";
-import { logger } from "../utils";
-import * as bun from "bun";
+export * from "./ts.config";
 
 const defaultConfig: DefaultConfig = {
-  entryPoint: null,
-  projectRoot: null,
+  adapter: {
+    adapter: "local",
+    entryPoint: null,
+    projectRoot: null,
+  },
   resolveFileNodes: true,
   resolveImportedModules: true,
   skipNodeModules: true,
   verbose: false,
+  projectName: "Untitled Project",
+  projectId: null,
+};
+
+const validateLocalAdapter = (
+  adapter: DefaultConfig["adapter"]
+): adapter is DeepNonNullish<DefaultConfig["adapter"]> => {
+  if (adapter.adapter !== "local") {
+    return false;
+  }
+  if (!isString(adapter.projectRoot)) {
+    return false;
+  }
+  if (!isString(adapter.entryPoint)) {
+    return false;
+  }
+  return true;
+};
+
+const validateGithubAdapter = (
+  adapter: DefaultConfig["adapter"]
+): adapter is DeepNonNullish<DefaultConfig["adapter"]> => {
+  if (adapter.adapter !== "github") {
+    return false;
+  }
+  if (!isString(adapter.token)) {
+    return false;
+  }
+  if (!isString(adapter.repositorySlug)) {
+    return false;
+  }
+  return true;
 };
 
 /**
@@ -26,19 +64,32 @@ const defaultConfig: DefaultConfig = {
  * @throws {Error} If projectRoot or entryPoint are not valid strings
  */
 const validateConfig = ({
-  entryPoint,
-  projectRoot,
+  adapter,
   resolveFileNodes,
   resolveImportedModules,
   skipNodeModules,
   verbose,
+  projectName,
+  projectId,
 }: DefaultConfig): DeepNonNullish<DefaultConfig> => {
-  if (!isString(projectRoot)) {
-    throw new Error("projectRoot is required");
+  if (!isString(adapter.adapter)) {
+    throw new Error("adapter.adapter must be a string");
   }
-  if (!isString(entryPoint)) {
-    throw new Error("entryPoint is required");
+  switch (adapter.adapter) {
+    case "local":
+      if (!validateLocalAdapter(adapter)) {
+        throw new Error("Invalid local adapter");
+      }
+      break;
+    case "github":
+      if (!validateGithubAdapter(adapter)) {
+        throw new Error("Invalid github adapter");
+      }
+      break;
+    default:
+      throw new Error("Invalid adapter");
   }
+
   if (!isBoolean(resolveFileNodes)) {
     throw new Error("resolveFileNodes must be a boolean");
   }
@@ -51,53 +102,21 @@ const validateConfig = ({
   if (!isBoolean(verbose)) {
     throw new Error("verbose must be a boolean");
   }
+  if (!isString(projectName)) {
+    throw new Error("projectName must be a string");
+  }
+  if (!isString(projectId)) {
+    throw new Error("projectId must be a string");
+  }
   return {
-    entryPoint,
-    projectRoot,
+    adapter,
     resolveFileNodes,
     resolveImportedModules,
     skipNodeModules,
     verbose,
+    projectName,
+    projectId,
   };
-};
-
-/**
- * Parses and validates the TypeScript configuration file
- * @param {Nullable<string>} tsConfigPath - Path to the tsconfig.json file
- * @param {Nullable<string>} projectRoot - Root directory of the project
- * @returns {Promise<Nullable<ts.ParsedCommandLine>>} Parsed TypeScript configuration object or null if invalid
- */
-const parseTsConfig = async (
-  tsConfigPath: Nullable<string>,
-  projectRoot: Nullable<string>
-): Promise<Nullable<ts.ParsedCommandLine>> => {
-  if (!isString(tsConfigPath)) {
-    logger.warn("No tsconfig.json path provided, aborting", "parseTsConfig");
-    return null;
-  }
-  if (!isString(projectRoot)) {
-    logger.warn("No project root provided, aborting", "parseTsConfig");
-    return null;
-  }
-  if (!bun.file(tsConfigPath).exists()) {
-    logger.warn(
-      `tsconfig.json file does not exist at ${tsConfigPath}, aborting`,
-      "parseTsConfig"
-    );
-    return null;
-  }
-  try {
-    const tsConfigFileContent = await bun.file(tsConfigPath).text();
-    const tsConfigObject = ts.parseJsonConfigFileContent(
-      tsConfigFileContent,
-      ts.sys,
-      projectRoot
-    );
-    return tsConfigObject;
-  } catch (error) {
-    logger.error(error, "parseTsConfig");
-    return null;
-  }
 };
 
 /**
@@ -105,16 +124,14 @@ const parseTsConfig = async (
  * Merges it with default config and finds the tsconfig.json path
  * @returns {Config} The complete validated configuration object
  */
-export const parseConfig = async (): Promise<Config> => {
+export const parseConfig = async <TAdapter extends AdapterType>(
+  overrideConfig: Partial<JsonConfig> = {}
+): Promise<StaticConfig<TAdapter>> => {
   const config = validateConfig({
     ...defaultConfig,
     ...((jsonConfig ?? {}) as JsonConfig),
+    ...overrideConfig,
   });
 
-  const tsConfigPath =
-    ts.findConfigFile(config.projectRoot, ts.sys.fileExists, "tsconfig.json") ??
-    null;
-  const tsConfig = await parseTsConfig(tsConfigPath, config.projectRoot);
-
-  return { ...config, tsConfigPath, tsConfig };
+  return config as StaticConfig<TAdapter>;
 };

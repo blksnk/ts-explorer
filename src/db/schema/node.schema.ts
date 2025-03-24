@@ -17,6 +17,9 @@ export const node = pgTable("nodes", {
   ...timestamps,
 });
 
+export type NodeInput = typeof node.$inferInsert;
+export type NodeOutput = typeof node.$inferSelect;
+
 export const nodeParent = relations(node, ({ one }) => ({
   parentNode: one(node, {
     fields: [node.parentId],

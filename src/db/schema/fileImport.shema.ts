@@ -12,3 +12,6 @@ export const fileImport = pgTable("file_imports", {
     .notNull(),
   ...timestamps,
 });
+
+export type FileImportOutput = typeof fileImport.$inferSelect;
+export type FileImportInput = typeof fileImport.$inferInsert;
