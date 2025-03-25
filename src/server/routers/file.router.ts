@@ -4,6 +4,11 @@ import { eq, or } from "drizzle-orm";
 
 const fileRouter = Router();
 
+fileRouter.get("/", async (_req, res) => {
+  const files = await db.select().from(schemas.file);
+  res.json({ data: files });
+});
+
 fileRouter.get("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) {
@@ -18,10 +23,10 @@ fileRouter.get("/:id", async (req, res) => {
     res.status(404).json({ error: "File not found" });
     return;
   }
-  res.json(file);
+  res.json({ data: file });
 });
 
-fileRouter.get("/:id/importing", async (req, res) => {
+fileRouter.get("/:id/imports", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) {
     res.status(400).json({ error: "Invalid file id" });
@@ -37,7 +42,7 @@ fileRouter.get("/:id/importing", async (req, res) => {
     from: id,
     to: importedFileId,
   }));
-  res.json(links);
+  res.json({ data: links });
 });
 
 fileRouter.get("/:id/imported-by", async (req, res) => {
@@ -56,7 +61,7 @@ fileRouter.get("/:id/imported-by", async (req, res) => {
     from: importingFileId,
     to: id,
   }));
-  res.json(links);
+  res.json({ data: links });
 });
 
 fileRouter.get("/:id/nodes", async (req, res) => {
@@ -70,7 +75,7 @@ fileRouter.get("/:id/nodes", async (req, res) => {
     .from(schemas.node)
     .where(eq(schemas.node.fileId, id));
 
-  res.json(fileNodes);
+  res.json({ data: fileNodes });
 });
 
 export { fileRouter };
