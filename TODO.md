@@ -22,4 +22,5 @@
 
 ## Stretch goals
 
+- [] Add unit tests
 - [] Make the parsing stack generic to allow for languages other than TS
