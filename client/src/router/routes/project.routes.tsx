@@ -1,5 +1,9 @@
 import type { RouteObject } from "react-router";
-import { ProjectListPage } from "../../pages";
+import {
+  ProjectDetailsPage,
+  ProjectFilesPage,
+  ProjectListPage,
+} from "../../pages";
 
 export const projectRoutes: RouteObject[] = [
   {
@@ -12,12 +16,10 @@ export const projectRoutes: RouteObject[] = [
   },
   {
     path: "/projects/:id",
-    element: <>Project details</>,
-    children: [
-      {
-        path: "/projects/:id/files",
-        element: <>project files</>,
-      },
-    ],
+    element: <ProjectDetailsPage />,
+  },
+  {
+    path: "/projects/:id/files",
+    element: <ProjectFilesPage />,
   },
 ];

@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 export const ResultWrapper = <T,>({
   result,
   loading,
+  errorTitle,
   RenderData,
   RenderError,
   RenderLoading,
@@ -24,7 +25,7 @@ export const ResultWrapper = <T,>({
   if (result.error) {
     if (RenderError) return RenderError(result.error);
     return (
-      <Callout color="error" title="Error">
+      <Callout color="error" title={errorTitle ?? "Error"}>
         {result.error}
       </Callout>
     );

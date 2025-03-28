@@ -7,5 +7,6 @@ export type ResultWrapperProps<T> = {
   RenderData: (data: T) => ReactNode;
   RenderError?: (error: string) => ReactNode;
   RenderLoading?: () => ReactNode;
+  errorTitle?: string;
   loading?: boolean;
 };
