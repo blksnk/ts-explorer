@@ -3,9 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "parse": "bun src/index.ts",
-    "serve": "bun src/server/index.ts",
-    "serve:watch": "bun --watch src/server/index.ts",
+    "parse": "bun scripts/local-parse-and-index/script.ts",
+    "serve": "bun server/index.ts",
+    "serve:watch": "bun --watch server/index.ts",
     "client:dev": "cd client && bun run dev",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bunx drizzle-kit migrate",

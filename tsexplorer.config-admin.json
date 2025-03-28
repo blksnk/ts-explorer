@@ -1,0 +1,13 @@
+{
+  "resolveFileNodes": true,
+  "resolveImportedModules": true,
+  "skipNodeModules": true,
+  "verbose": true,
+  "adapter": {
+    "adapter": "local",
+    "entryPoint": "../../missions/ublo/front/src/main.tsx",
+    "projectRoot": "../../missions/ublo/front"
+  },
+  "projectName": "Ublo - admin",
+  "projectId": "102b30b3-0964-4b3d-bd34-f053478568a9"
+}
