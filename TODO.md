@@ -1,5 +1,9 @@
 # TODO
 
+## Project structure
+
+- [] Split parser / db / indexer / server / client codebases
+
 ## TS config support
 
 - [] Add support for aliases
@@ -14,7 +18,7 @@
 
 ## Server
 
-- [] 
+- [] Add endpoint to get all import links between 2 files
 
 ## Client
 
