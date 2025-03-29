@@ -107,14 +107,23 @@ export const deleteFilesIn = async (
  * Formats a source file into a database file input object
  * @param {SourceFileInput | SourceFile} sourceFile - The source file to format
  * @param {string} projectId - The ID of the project this file belongs to
+ * @param {string} [projectRoot = ""] - The root directory of the project
  * @returns {FileInput} A database file input object containing the file's path, name, hash and project ID
  */
 const formatFileInput = (
   sourceFile: SourceFileInput | SourceFile,
-  projectId: string
+  projectId: string,
+  projectRoot = ""
 ): FileInput => {
-  const path = sourceFile.file.fileName;
-  const name = path.split("/").pop() ?? path;
+  const fileName = sourceFile.file.fileName;
+  const name = fileName.split("/").pop() ?? fileName;
+  let path =
+    projectRoot.length && fileName.startsWith(projectRoot)
+      ? fileName.slice(projectRoot.length)
+      : fileName;
+  if (path.startsWith("/")) {
+    path = path.slice(1);
+  }
   return {
     path,
     name,
@@ -127,14 +136,16 @@ const formatFileInput = (
  * Indexes a single source file into the database
  * @param {SourceFileInput | SourceFile} sourceFile - The source file to index
  * @param {string} projectId - The ID of the project this file belongs to
+ * @param {string} [projectRoot = ""] - The root directory of the project
  * @returns {Promise<typeof schemas.file.$inferSelect | null>} The indexed file record if successful, null otherwise
  */
 export const indexFile = async (
   sourceFile: SourceFileInput | SourceFile,
-  projectId: string
+  projectId: string,
+  projectRoot = ""
 ): Promise<Nullable<FileOutput>> => {
   try {
-    const fileInput = formatFileInput(sourceFile, projectId);
+    const fileInput = formatFileInput(sourceFile, projectId, projectRoot);
     const files = await db.insert(schemas.file).values(fileInput).returning();
     const file = files[0];
     if (!file) {
@@ -157,12 +168,13 @@ export const indexFile = async (
  */
 export const indexFiles = async (
   sourceFiles: (SourceFileInput | SourceFile)[],
-  projectId: string
+  projectId: string,
+  projectRoot = ""
 ): Promise<Nullable<FileOutput[]>> => {
   try {
     if (!sourceFiles.length) return [];
     const fileInputs = sourceFiles.map((sourceFile) =>
-      formatFileInput(sourceFile, projectId)
+      formatFileInput(sourceFile, projectId, projectRoot)
     );
     const files = await batchOperation(
       fileInputs,

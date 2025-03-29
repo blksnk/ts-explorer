@@ -48,15 +48,17 @@ const logger = Logger();
  * Indexes all files in a project by inserting them into the database
  * @param {string} projectId - The ID of the project these files belong to
  * @param {ParserMaps} parserMaps - Parser maps containing files to index
+ * @param {string} projectRoot - The root directory of the project
  * @returns {Promise<Nullable<FileOutput[]>>} Array of indexed files if successful, null if failed
  */
 const indexProjectFiles = async (
   projectId: string,
-  parserMaps: ParserMaps
+  parserMaps: ParserMaps,
+  projectRoot = ""
 ): Promise<Nullable<FileOutput[]>> => {
   // index project files
   const files = mapValues(parserMaps.files);
-  const projectFiles = await indexFiles(files, projectId);
+  const projectFiles = await indexFiles(files, projectId, projectRoot);
   logger.log(
     `Indexed ${projectFiles ? projectFiles.length : "no"} project files`,
     "indexProjectFiles"
@@ -258,7 +260,11 @@ export const index = async (
   await deleteFilesIn(project.id);
 
   // index project files
-  const projectFiles = await indexProjectFiles(project.id, parserMaps);
+  const projectFiles = await indexProjectFiles(
+    project.id,
+    parserMaps,
+    config.adapter.adapter === "local" ? config.adapter.projectRoot : undefined
+  );
 
   // return if no files were indexed
   if (!projectFiles?.length) return true;
