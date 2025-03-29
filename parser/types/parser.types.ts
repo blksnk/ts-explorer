@@ -20,6 +20,7 @@ export type SourceFile = {
   info: ts.PreProcessedFileInfo;
   hash: FileHash;
   nodes: SourceNode[];
+  content: string;
 };
 
 export type ResolvedModule = ts.ResolvedModuleFull;

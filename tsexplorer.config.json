@@ -5,11 +5,7 @@
   "verbose": true,
   "adapter": {
     "adapter": "local",
-    "entryPoints": [
-      "../../missions/front-ui/src/components/index.ts",
-      "../../missions/front-ui/src/layouts/index.ts",
-      "../../missions/front-ui/src/utils/index.ts"
-    ],
+    "entryPoints": ["../../missions/front-ui/src/index.ts"],
     "projectRoot": "../../missions/front-ui"
   },
   "projectName": "uikit",

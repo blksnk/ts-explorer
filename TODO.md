@@ -15,7 +15,7 @@
 
 ## Database / Indexer
 
-- [ ] Index file contents (text) without nodes
+- [x] Index file contents (text) without nodes
 - [ ] Store node modules in seperate table
 - [ ] Flag entry files as such in DB
 

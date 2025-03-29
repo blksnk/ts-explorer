@@ -5,7 +5,7 @@ Aims to become a lightweight project explorer, highlighting file to file depende
 To install dependencies:
 
 ```bash
-bun install
+bun install && cd client && bun install
 ```
 
 To run:

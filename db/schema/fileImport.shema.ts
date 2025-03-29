@@ -4,10 +4,10 @@ import { timestamps } from "../dataTypes";
 
 export const fileImport = pgTable("file_imports", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  importingFileId: integer()
+  importingFileId: integer("importing_file_id")
     .references(() => file.id)
     .notNull(),
-  importedFileId: integer()
+  importedFileId: integer("imported_file_id")
     .references(() => file.id)
     .notNull(),
   ...timestamps,

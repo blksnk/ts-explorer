@@ -4,6 +4,7 @@ import type { SourceNode } from "../../parser/types";
 import type { Nullable } from "@ubloimmo/front-util";
 import { MAX_BATCH_SIZE } from "../indexer.constants";
 import { Logger } from "@ubloimmo/front-util";
+import { batchOperation } from "../indexer.utils";
 
 const logger = Logger();
 
@@ -95,32 +96,11 @@ export const indexNodes = async (
   nodeInputs: NodeInput[]
 ): Promise<Nullable<NodeOutput[]>> => {
   try {
-    if (!nodeInputs.length) return [];
-
-    if (nodeInputs.length <= MAX_BATCH_SIZE) {
-      const nodes = await db
-        .insert(schemas.node)
-        .values(nodeInputs)
-        .returning();
-      logger.log(`Indexed ${nodes.length} nodes`, "indexNodes");
-      return nodes;
-    }
-
-    const batches = [];
-    for (let i = 0; i < nodeInputs.length; i += MAX_BATCH_SIZE) {
-      const batch = nodeInputs.slice(i, i + MAX_BATCH_SIZE);
-      batches.push(batch);
-    }
-
-    const results = await Promise.all(
-      batches.map(async (batch) => {
-        const nodes = await db.insert(schemas.node).values(batch).returning();
-        logger.log(`Indexed batch of ${nodes.length} nodes`, "indexNodes");
-        return nodes;
-      })
-    );
-
-    const nodes = results.flat();
+    const nodes = await batchOperation(nodeInputs, async (inputs) => {
+      const contents = await db.insert(schemas.node).values(inputs).returning();
+      logger.log(`Indexed batch of ${contents.length} nodes`, "indexNodes");
+      return contents;
+    });
     logger.log(`Indexed total of ${nodes.length} nodes`, "indexNodes");
     return nodes;
   } catch (e) {

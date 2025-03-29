@@ -6,6 +6,8 @@ import { deleteFileImportBy, deleteFileImportOf } from "./fileImport.indexer";
 import type { SourceFile, SourceFileInput } from "../../parser/types";
 import type { FileInput, FileOutput } from "../../db";
 import type { Nullable } from "@ubloimmo/front-util";
+import { deleteFileContents } from "./fileContent.indexer";
+import { batchOperation } from "../indexer.utils";
 
 const logger = Logger();
 
@@ -14,12 +16,14 @@ const logger = Logger();
  * @param {number} fileId - The ID of the file to delete
  * @param {boolean} [deleteNodes = true] - Whether to delete the nodes associated with the file
  * @param {boolean} [deleteFileImports = true] - Whether to delete the file imports associated with the file
+ * @param {boolean} [deleteFileContent = true] - Whether to delete the file content associated with the file
  * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
  */
 export const deleteFile = async (
   fileId: number,
   deleteNodes: boolean = true,
-  deleteFileImports: boolean = true
+  deleteFileImports: boolean = true,
+  deleteFileContent: boolean = true
 ): Promise<boolean> => {
   try {
     if (deleteNodes) {
@@ -32,6 +36,10 @@ export const deleteFile = async (
         deleteFileImportOf(fileId),
       ]);
       logger.log(`Deleted file imports for file ${fileId}`, "deleteFile");
+    }
+    if (deleteFileContent) {
+      await deleteFileContents(fileId);
+      logger.log(`Deleted file content for file ${fileId}`, "deleteFile");
     }
     await db.delete(schemas.file).where(eq(schemas.file.id, fileId));
     logger.log(`Deleted file ${fileId}`, "deleteFile");
@@ -52,7 +60,8 @@ export const deleteFile = async (
 export const deleteFilesIn = async (
   projectId: string,
   deleteNodes: boolean = true,
-  deleteFileImports: boolean = true
+  deleteFileImports: boolean = true,
+  deleteFileContent: boolean = true
 ): Promise<boolean> => {
   try {
     const files = await db
@@ -60,7 +69,9 @@ export const deleteFilesIn = async (
       .from(schemas.file)
       .where(eq(schemas.file.projectId, projectId));
     const results = await Promise.all(
-      files.map((file) => deleteFile(file.id, deleteNodes, deleteFileImports))
+      files.map((file) =>
+        deleteFile(file.id, deleteNodes, deleteFileImports, deleteFileContent)
+      )
     );
     const success = results.every((result) => result);
     if (success) {
@@ -139,7 +150,10 @@ export const indexFiles = async (
     const fileInputs = sourceFiles.map((sourceFile) =>
       formatFileInput(sourceFile, projectId)
     );
-    const files = await db.insert(schemas.file).values(fileInputs).returning();
+    const files = await batchOperation(
+      fileInputs,
+      async (inputs) => await db.insert(schemas.file).values(inputs).returning()
+    );
     logger.log(`Indexed ${files.length} files`, "indexFiles");
     return files;
   } catch (e) {

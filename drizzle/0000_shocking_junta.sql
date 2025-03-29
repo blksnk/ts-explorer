@@ -5,7 +5,8 @@ CREATE TABLE "files" (
 	"file_hash" varchar(64) NOT NULL,
 	"project_id" uuid NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "files_file_hash_unique" UNIQUE("file_hash")
 );
 --> statement-breakpoint
 CREATE TABLE "file_imports" (
@@ -36,7 +37,16 @@ CREATE TABLE "nodes" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "file_content" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "file_content_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"file_id" integer NOT NULL,
+	"content" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "files" ADD CONSTRAINT "files_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "file_imports" ADD CONSTRAINT "file_imports_importingFileId_files_id_fk" FOREIGN KEY ("importingFileId") REFERENCES "public"."files"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "file_imports" ADD CONSTRAINT "file_imports_importedFileId_files_id_fk" FOREIGN KEY ("importedFileId") REFERENCES "public"."files"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "nodes" ADD CONSTRAINT "nodes_file_id_files_id_fk" FOREIGN KEY ("file_id") REFERENCES "public"."files"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "nodes" ADD CONSTRAINT "nodes_file_id_files_id_fk" FOREIGN KEY ("file_id") REFERENCES "public"."files"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "file_content" ADD CONSTRAINT "file_content_file_id_files_id_fk" FOREIGN KEY ("file_id") REFERENCES "public"."files"("id") ON DELETE no action ON UPDATE no action;

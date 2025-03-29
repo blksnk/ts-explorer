@@ -1,4 +1,9 @@
-import { isObject, type Nullable, type Predicate } from "@ubloimmo/front-util";
+import {
+  isObject,
+  isString,
+  type Nullable,
+  type Predicate,
+} from "@ubloimmo/front-util";
 import type {
   AdapterType,
   ParserMaps,
@@ -10,6 +15,8 @@ import { deleteFilesIn, indexFiles } from "./file.indexer";
 import { indexProject } from "./project.indexer";
 import { formatNodeInput, indexNodeParent, indexNodes } from "./node.indexer";
 import type {
+  FileContentInput,
+  FileContentOutput,
   FileImportInput,
   FileImportOutput,
   FileOutput,
@@ -17,6 +24,10 @@ import type {
 } from "../../db";
 import { indexFileImports } from "./fileImport.indexer";
 import { Logger } from "@ubloimmo/front-util";
+import {
+  formatFileContentInput,
+  indexFileContents,
+} from "./fileContent.indexer";
 
 const logger = Logger();
 
@@ -127,6 +138,33 @@ const indexProjectFileImports = async (
 };
 
 /**
+ * Indexes file contents for all project files by creating database records
+ * @param {FileOutput[]} projectFiles - Array of indexed file records to store contents for
+ * @param {ParserMaps} parserMaps - Parser maps containing file contents mapped to file hashes
+ * @returns {Promise<Nullable<FileContentOutput[]>>} Array of indexed file content records if successful, null if failed
+ */
+const indexProjectFileContents = async (
+  projectFiles: FileOutput[],
+  parserMaps: ParserMaps
+): Promise<Nullable<FileContentOutput[]>> => {
+  if (!projectFiles.length) return [];
+  const fileContentInputs = projectFiles
+    .map(({ id, hash }) => {
+      const content = parserMaps.files.get(hash)?.content ?? null;
+      if (!isString(content)) return null;
+      return formatFileContentInput(id, content);
+    })
+    .filter(isObject as Predicate<FileContentInput>);
+
+  const fileContents = await indexFileContents(fileContentInputs);
+  logger.log(
+    `Indexed ${fileContents ? fileContents.length : "no"} file contents`,
+    "indexProjectFileContents"
+  );
+  return fileContents;
+};
+
+/**
  * Indexes a project by creating database records for the project, its files, nodes and their relationships
  * @param {StaticConfig<AdapterType>} config - Configuration object containing project details and indexing options
  * @param {ParserMaps} parserMaps - Parser maps containing files, nodes and their relationships to index
@@ -154,6 +192,9 @@ export const index = async (
 
   // return if no files were indexed
   if (!projectFiles?.length) return true;
+
+  // index project file contents
+  await indexProjectFileContents(projectFiles, parserMaps);
 
   // index project file imports
   if (config.resolveImportedModules) {

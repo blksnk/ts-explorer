@@ -71,6 +71,12 @@ export const resolveImportedModule = (
   return resolved.resolvedModule;
 };
 
+/**
+ * Parses a source file and returns information about it
+ * @param {string} fileName - Path to the file to parse
+ * @param {ResolverConfig} config - Configuration object for resolving file nodes
+ * @returns {Promise<Nullable<SourceFile>>} Object containing file information or null if parsing fails
+ */
 export const parseSourceFile = async (
   fileName: string,
   config: ResolverConfig
@@ -109,6 +115,7 @@ export const parseSourceFile = async (
       info,
       hash,
       nodes,
+      content,
     };
   } catch (error) {
     logger.error(error, "getSourceFile");
