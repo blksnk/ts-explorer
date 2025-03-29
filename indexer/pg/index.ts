@@ -1,4 +1,6 @@
 import {
+  isArray,
+  isNumber,
   isObject,
   isString,
   type Nullable,
@@ -21,6 +23,9 @@ import type {
   FileImportOutput,
   FileOutput,
   NodeOutput,
+  NodePackageOutput,
+  PackageImportInput,
+  PackageImportOutput,
 } from "../../db";
 import { indexFileImports } from "./fileImport.indexer";
 import { Logger } from "@ubloimmo/front-util";
@@ -28,6 +33,14 @@ import {
   formatFileContentInput,
   indexFileContents,
 } from "./fileContent.indexer";
+import {
+  formatNodePackageInput,
+  indexNodePackages,
+} from "./nodePackage.indexer";
+import {
+  formatPackageImportInput,
+  indexPackageImports,
+} from "./packageImport.indexer";
 
 const logger = Logger();
 
@@ -165,6 +178,63 @@ const indexProjectFileContents = async (
 };
 
 /**
+ * Indexes node packages for a project by creating database records
+ * @param {ParserMaps} parserMaps - Parser maps containing node packages to index
+ * @returns {Promise<Nullable<NodePackageOutput[]>>} Array of indexed node package records if successful, null if failed
+ */
+const indexProjectNodePackages = async (
+  projectId: string,
+  parserMaps: ParserMaps
+): Promise<Nullable<NodePackageOutput[]>> => {
+  const nodePackageInputs = mapValues(parserMaps.packages).map((nodePackage) =>
+    formatNodePackageInput(nodePackage, projectId)
+  );
+  const nodePackages = await indexNodePackages(nodePackageInputs);
+  logger.log(
+    `Indexed ${nodePackages ? nodePackages.length : "no"} node packages`,
+    "indexProjectNodePackages"
+  );
+  return nodePackages;
+};
+
+/**
+ * Indexes package imports for all project files by creating database records
+ * @param {FileOutput[]} projectFiles - Array of indexed file records to store package imports for
+ * @param {NodePackageOutput[]} projectNodePackages - Array of indexed node package records to link imports to
+ * @param {ParserMaps} parserMaps - Parser maps containing file package imports mapped to file hashes
+ * @returns {Promise<Nullable<PackageImportOutput[]>>} Array of indexed package import records if successful, null if failed
+ */
+const indexProjectPackageImports = async (
+  projectFiles: FileOutput[],
+  projectNodePackages: NodePackageOutput[],
+  parserMaps: ParserMaps
+): Promise<Nullable<PackageImportOutput[]>> => {
+  // break if no files or node packages are indexed
+  if (!projectFiles.length || !projectNodePackages.length) return [];
+  // map file package imports to their importing and imported files
+  const packageImportInputs = projectFiles.flatMap(({ id: fileId, hash }) => {
+    const importedPackageNames = parserMaps.filePackages.get(hash) ?? [];
+    return importedPackageNames
+      .map((name): Nullable<PackageImportInput> => {
+        const nodePackageId =
+          projectNodePackages.find((p) => p.name === name)?.id ?? null;
+        if (!isNumber(nodePackageId)) return null;
+        return formatPackageImportInput(fileId, nodePackageId);
+      })
+      .filter(isObject as Predicate<PackageImportInput>);
+  });
+  // break if no package imports are to be indexed
+  if (!packageImportInputs.length) return [];
+  // index package imports
+  const packageImports = await indexPackageImports(packageImportInputs);
+  logger.log(
+    `Indexed ${packageImports ? packageImports.length : "no"} package imports`,
+    "indexProjectPackageImports"
+  );
+  return packageImports;
+};
+
+/**
  * Indexes a project by creating database records for the project, its files, nodes and their relationships
  * @param {StaticConfig<AdapterType>} config - Configuration object containing project details and indexing options
  * @param {ParserMaps} parserMaps - Parser maps containing files, nodes and their relationships to index
@@ -195,6 +265,19 @@ export const index = async (
 
   // index project file contents
   await indexProjectFileContents(projectFiles, parserMaps);
+
+  // index project node packages, then per-file package imports
+  const projectNodePackages = await indexProjectNodePackages(
+    project.id,
+    parserMaps
+  );
+  if (isArray(projectNodePackages)) {
+    await indexProjectPackageImports(
+      projectFiles,
+      projectNodePackages,
+      parserMaps
+    );
+  }
 
   // index project file imports
   if (config.resolveImportedModules) {

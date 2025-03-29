@@ -8,6 +8,7 @@ import type { FileInput, FileOutput } from "../../db";
 import type { Nullable } from "@ubloimmo/front-util";
 import { deleteFileContents } from "./fileContent.indexer";
 import { batchOperation } from "../indexer.utils";
+import { deletePackageImportIn } from "./packageImport.indexer";
 
 const logger = Logger();
 
@@ -23,7 +24,8 @@ export const deleteFile = async (
   fileId: number,
   deleteNodes: boolean = true,
   deleteFileImports: boolean = true,
-  deleteFileContent: boolean = true
+  deleteFileContent: boolean = true,
+  deletePackageImports: boolean = true
 ): Promise<boolean> => {
   try {
     if (deleteNodes) {
@@ -41,6 +43,9 @@ export const deleteFile = async (
       await deleteFileContents(fileId);
       logger.log(`Deleted file content for file ${fileId}`, "deleteFile");
     }
+    if (deletePackageImports) {
+      await deletePackageImportIn(fileId);
+    }
     await db.delete(schemas.file).where(eq(schemas.file.id, fileId));
     logger.log(`Deleted file ${fileId}`, "deleteFile");
     return true;
@@ -55,13 +60,16 @@ export const deleteFile = async (
  * @param {string} projectId - The ID of the project to delete files from
  * @param {boolean} [deleteNodes = true] - Whether to delete the nodes associated with the files
  * @param {boolean} [deleteFileImports = true] - Whether to delete the file imports associated with the files
+ * @param {boolean} [deleteFileContent = true] - Whether to delete the file content associated with the files
+ * @param {boolean} [deletePackageImports = true] - Whether to delete the package imports associated with the files
  * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
  */
 export const deleteFilesIn = async (
   projectId: string,
   deleteNodes: boolean = true,
   deleteFileImports: boolean = true,
-  deleteFileContent: boolean = true
+  deleteFileContent: boolean = true,
+  deletePackageImports: boolean = true
 ): Promise<boolean> => {
   try {
     const files = await db
@@ -70,7 +78,13 @@ export const deleteFilesIn = async (
       .where(eq(schemas.file.projectId, projectId));
     const results = await Promise.all(
       files.map((file) =>
-        deleteFile(file.id, deleteNodes, deleteFileImports, deleteFileContent)
+        deleteFile(
+          file.id,
+          deleteNodes,
+          deleteFileImports,
+          deleteFileContent,
+          deletePackageImports
+        )
       )
     );
     const success = results.every((result) => result);

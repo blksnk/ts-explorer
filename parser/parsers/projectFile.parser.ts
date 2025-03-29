@@ -60,9 +60,10 @@ export const parseProjectFile = async (
       },
     ];
   }
-  // recursively parse imported files
   const imports: FileHash[] = [];
-  const packageImports: PackageName[] = [];
+  // store unique package imports
+  const packageImports: Set<PackageName> = new Set();
+  // recursively parse imported files
   const importedFiles = await Promise.all(
     resolvedModules.map(async (resolvedModule) => {
       // register external library imports
@@ -73,21 +74,25 @@ export const parseProjectFile = async (
             "parseProjectFile"
           );
           // extract package name and version, break if not found
-          const name = resolvedModule.packageId?.name;
+          let name = resolvedModule.packageId?.name;
           const version = resolvedModule.packageId?.version;
           if (!name || !version) break registerNodePackage;
+          // remove `@types/` from name if present
+          // ex: @types/react -> react
+          name = name.replace(/^@types\//, "");
           // create package object
           const packageImport: NodePackage = {
             name,
             version,
           };
+
           // add package to unique packages if not already present
           // TODO: determine if this check is necessary, since map keys are unique
           if (!uniquePackages.has(packageImport.name)) {
             uniquePackages.set(packageImport.name, packageImport);
           }
           // add package to package imports
-          packageImports.push(packageImport.name);
+          packageImports.add(packageImport.name);
         }
 
         // skip external library imports if configured
@@ -136,7 +141,7 @@ export const parseProjectFile = async (
   resultMap.set(sourceFile.hash, {
     sourceFile,
     imports,
-    packageImports,
+    packageImports: Array.from(packageImports),
   });
 
   // add imported files to result map while ensuring no duplicates

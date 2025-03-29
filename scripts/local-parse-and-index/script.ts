@@ -14,5 +14,5 @@ logger.debug(config, "config");
 
 const parserMaps = await Parser.parseProject(config);
 logger.info("done parsing");
-await index(config, parserMaps, "pg");
-logger.info("done indexing");
+// await index(config, parserMaps, "pg");
+// logger.info("done indexing");

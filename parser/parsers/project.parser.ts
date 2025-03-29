@@ -97,5 +97,6 @@ export const parseProject = async (
   logger.log(parserMaps.imports.size, "imports parsed");
   logger.log(parserMaps.packages.size, "unique imported packages parsed");
   logger.log(parserMaps.filePackages.size, "file packages parsed");
+  logger.log(parserMaps.packages, "packages");
   return parserMaps;
 };

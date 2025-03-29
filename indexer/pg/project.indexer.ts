@@ -3,13 +3,14 @@ import { db, schemas } from "../../db";
 import type { AdapterType, CompleteParserConfig } from "../../parser/types";
 import { Logger } from "@ubloimmo/front-util";
 import { deleteFilesIn } from "./file.indexer";
+import { deleteNodePackage, deleteNodePackagesIn } from "./nodePackage.indexer";
 
 const logger = Logger();
 
 /**
  * Deletes a project from the database by its ID
  * @param {string} projectId - The ID of the project to delete
- * @param {boolean} [deleteProjectData = true] - Whether to delete the project data (files, nodes, imports) along the the project
+ * @param {boolean} [deleteProjectData = true] - Whether to delete the project data (files, nodes, imports, packages) along with the project
  * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
  */
 export const deleteProject = async (
@@ -18,7 +19,8 @@ export const deleteProject = async (
 ): Promise<boolean> => {
   try {
     if (deleteProjectData) {
-      await deleteFilesIn(projectId, true, true);
+      await deleteFilesIn(projectId, true, true, true, true);
+      await deleteNodePackagesIn(projectId);
       logger.log(
         `Deleted project data for project ${projectId}`,
         "deleteProject"
