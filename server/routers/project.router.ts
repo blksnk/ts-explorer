@@ -64,4 +64,13 @@ projectRouter.get("/:id/files", async (req, res) => {
   res.json({ data: files });
 });
 
+projectRouter.get("/:id/node-packages", async (req, res) => {
+  const { id } = req.params;
+  const nodePackages = await db
+    .select()
+    .from(schemas.nodePackage)
+    .where(eq(schemas.nodePackage.projectId, id));
+  res.json({ data: nodePackages });
+});
+
 export { projectRouter };

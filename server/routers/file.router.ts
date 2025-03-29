@@ -78,4 +78,45 @@ fileRouter.get("/:id/nodes", async (req, res) => {
   res.json({ data: fileNodes });
 });
 
+fileRouter.get("/:id/imported-packages", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid file id" });
+    return;
+  }
+  const packageImports = await db
+    .select({
+      name: schemas.nodePackage.name,
+      version: schemas.nodePackage.version,
+      id: schemas.nodePackage.id,
+    })
+    .from(schemas.packageImport)
+    .where(eq(schemas.packageImport.fileId, id))
+    .innerJoin(
+      schemas.nodePackage,
+      eq(schemas.packageImport.nodePackageId, schemas.nodePackage.id)
+    );
+
+  res.json({ data: packageImports });
+});
+
+fileRouter.get("/:id/content", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid file id" });
+    return;
+  }
+  const contents = await db
+    .select()
+    .from(schemas.fileContent)
+    .where(eq(schemas.fileContent.fileId, id));
+
+  const content = contents[0]?.content;
+  if (!content) {
+    res.status(404).json({ error: "File content not found" });
+    return;
+  }
+  res.json({ data: content });
+});
+
 export { fileRouter };
