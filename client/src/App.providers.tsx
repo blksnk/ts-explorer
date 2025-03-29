@@ -12,7 +12,7 @@ export const AppProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <QueryClientProvider client={queryClient}>
       <ApiContextProvider>
-        <ThemeProvider _forceTheme="lake" lightDarkSupport>
+        <ThemeProvider _forceTheme="mantis" lightDarkSupport>
           <UikitTranslationProvider>
             <DialogProvider portalRoot="#dialog-root">
               {children}
