@@ -15,10 +15,11 @@ fileRouter.get("/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid file id" });
     return;
   }
-  const file = await db
+  const files = await db
     .select()
     .from(schemas.file)
     .where(eq(schemas.file.id, id));
+  const file = files[0];
   if (!file) {
     res.status(404).json({ error: "File not found" });
     return;
