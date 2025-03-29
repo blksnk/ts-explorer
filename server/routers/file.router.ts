@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, schemas } from "../../db";
 import { eq } from "drizzle-orm";
+import { highlightCode } from "../utils/hightlight.utils";
 
 const fileRouter = Router();
 
@@ -117,7 +118,10 @@ fileRouter.get("/:id/content", async (req, res) => {
     res.status(404).json({ error: "File content not found" });
     return;
   }
-  res.status(200).json({ data: content });
+
+  const highlighted = await highlightCode(content);
+
+  res.status(200).json({ data: { content, highlighted } });
 });
 
 export { fileRouter };

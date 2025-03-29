@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import type { WindowPaneProps } from "./WindowPane.types";
-import { GridLayout, GridTemplate } from "@ubloimmo/uikit";
+import { FlexRowLayout, GridLayout, GridTemplate } from "@ubloimmo/uikit";
 import { useMemo } from "react";
 
 export const WindowPane = ({
@@ -19,22 +19,21 @@ export const WindowPane = ({
     return ["1fr"];
   }, [Header, SideBar, Content]);
 
-  const columns = useMemo<GridTemplate>(() => {
-    if (SideBar) return ["s-9", "1fr"];
-    return ["1fr"];
-  }, [SideBar]);
-
   return (
     <WindowContainer
       as="section"
       rows={rows}
-      columns={columns}
+      columns={["1fr"]}
       className={active ? "active" : ""}
       gap={0}
     >
       {Header && <Header active={active} />}
-      {SideBar && <SideBar active={active} />}
-      {Content && <Content active={active} />}
+      {(SideBar || Content) && (
+        <WindowContentContainer fill>
+          {SideBar && <SideBar active={active} />}
+          {Content && <Content active={active} />}
+        </WindowContentContainer>
+      )}
     </WindowContainer>
   );
 };
@@ -52,6 +51,7 @@ const WindowContainer = styled(GridLayout)`
   border: 1px solid var(--window-outline-color);
   border-radius: var(--s-2);
   overflow: hidden;
+  position: relative;
 
   transition-property: background, box-shadow, border;
   transition-duration: 150ms;
@@ -61,4 +61,12 @@ const WindowContainer = styled(GridLayout)`
     --window-outline-color: var(--primary-medium);
     box-shadow: var(--shadow-card-elevation-medium);
   }
+`;
+
+const WindowContentContainer = styled(FlexRowLayout)`
+  height: 100%;
+  width: 100%;
+  max-height: 100%;
+  max-width: 100%;
+  overflow-y: auto;
 `;

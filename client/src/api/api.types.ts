@@ -50,6 +50,13 @@ export type FileRelationship = {
   to: FileId;
 };
 
+export type FileContent = {
+  content: string;
+  highlighted: {
+    html: string;
+  };
+};
+
 export type FileNode = {
   hash: string;
   end: number;

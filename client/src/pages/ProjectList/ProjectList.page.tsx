@@ -7,7 +7,6 @@ import {
   breakpointsPx,
 } from "@ubloimmo/uikit";
 import { ProjectCard, ResultWrapper } from "../../components";
-import { PageLayout } from "../../layouts";
 import styled from "styled-components";
 
 export const ProjectListPage = () => {
@@ -19,24 +18,22 @@ export const ProjectListPage = () => {
   });
 
   return (
-    <PageLayout>
-      <FlexColumnLayout fill="row" gap="s-6">
-        <Heading weight="medium">
-          All ({allProjects.data?.data?.length ?? 0}) Projects
-        </Heading>
+    <FlexColumnLayout fill="row" gap="s-6">
+      <Heading weight="medium">
+        All ({allProjects.data?.data?.length ?? 0}) Projects
+      </Heading>
 
-        <PageGrid columns={2} gap="s-3" fill>
-          <ResultWrapper
-            result={allProjects.data}
-            RenderData={(projects) =>
-              projects.map((project) => (
-                <ProjectCard project={project} key={project.id} />
-              ))
-            }
-          />
-        </PageGrid>
-      </FlexColumnLayout>
-    </PageLayout>
+      <PageGrid columns={2} gap="s-3" fill>
+        <ResultWrapper
+          result={allProjects.data}
+          RenderData={(projects) =>
+            projects.map((project) => (
+              <ProjectCard project={project} key={project.id} />
+            ))
+          }
+        />
+      </PageGrid>
+    </FlexColumnLayout>
   );
 };
 

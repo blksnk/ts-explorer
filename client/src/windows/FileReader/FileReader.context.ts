@@ -16,11 +16,11 @@ export const useFileReaderStore = (id: Nullish<FileId>) => {
   });
 
   const file = useMemo(() => {
-    if (!isObject(fileData.data?.data) || !isString(fileContent.data?.data))
+    if (!isObject(fileData.data?.data) || !isObject(fileContent.data?.data))
       return null;
     return {
       ...fileData.data.data,
-      content: fileContent.data.data,
+      ...fileContent.data.data,
     };
   }, [fileData, fileContent]);
 
@@ -29,10 +29,19 @@ export const useFileReaderStore = (id: Nullish<FileId>) => {
     [fileContent.isLoading, fileData.isLoading]
   );
 
+  const lines = useMemo(() => {
+    if (!isString(file?.content)) return [];
+    return file.content.split("\n");
+  }, [file?.content]);
+
+  const lineCount = useMemo(() => lines.length, [lines]);
+
   return {
     file,
     loading,
     id,
+    lines,
+    lineCount,
   };
 };
 
@@ -42,6 +51,8 @@ export const FILE_READER_CONTEXT = createContext<FileReaderContext>({
   file: null,
   loading: true,
   id: null,
+  lines: [],
+  lineCount: 0,
 });
 
 export const useFileReaderContext = () => useContext(FILE_READER_CONTEXT);

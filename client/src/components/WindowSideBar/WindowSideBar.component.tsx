@@ -17,8 +17,8 @@ export const WindowSideBar = ({
 const SideBarContainer = styled(FlexColumnLayout)`
   width: var(--s-9);
   min-width: var(--s-9);
-  height: 100%;
-  max-height: 100%;
+  min-height: 100%;
+  /* max-height: 100%; */
 
   padding: var(--s-2) var(--s-1);
 

@@ -3,6 +3,7 @@ import {
   Project,
   ProjectDetails,
   ProjectNodePackage,
+  type FileContent,
   type FileId,
   type FileNode,
   type FileNodePackageImport,
@@ -117,7 +118,7 @@ const fileEndpointsFactory = (client: ApiClient) => {
    * @returns Promise resolving to file content
    */
   const content = async (id: FileId) =>
-    await client.get<string>(`/files/${id}/content`);
+    await client.get<FileContent>(`/files/${id}/content`);
 
   return {
     list,
