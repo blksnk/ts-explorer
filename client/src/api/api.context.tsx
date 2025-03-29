@@ -4,7 +4,7 @@ import { apiEndpointsFactory } from "./api.endpoints";
 import { createContext, useContext } from "react";
 import { API_QUERY_KEYS } from "./api.queries";
 
-export const useApiContext = () => {
+export const useApiContextStore = () => {
   const client = useStatic(apiClientFactory);
 
   const endpoints = useStatic(() => apiEndpointsFactory(client));
@@ -17,22 +17,12 @@ export const useApiContext = () => {
   };
 };
 
-export type ApiContext = ReturnType<typeof useApiContext>;
+export type ApiContext = ReturnType<typeof useApiContextStore>;
 
-const apiContext = createContext<ApiContext>({
+export const API_CONTEXT = createContext<ApiContext>({
   client: apiClientFactory(),
   endpoints: apiEndpointsFactory(apiClientFactory()),
   queryKeys: API_QUERY_KEYS,
 });
 
-export const ApiContextProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-  const api = useApiContext();
-
-  return <apiContext.Provider value={api}>{children}</apiContext.Provider>;
-};
-
-export const useApi = () => useContext(apiContext);
+export const useApi = () => useContext(API_CONTEXT);

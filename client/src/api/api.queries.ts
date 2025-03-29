@@ -17,6 +17,7 @@ export const API_QUERY_KEYS: ApiQueryKeys = {
     get: (id) => ["projects", id ?? ""],
     files: (id) => ["projects", id ?? "", "files"],
     details: (id) => ["projects", id ?? "", "details"],
+    nodePackages: (id) => ["projects", id ?? "", "node-packages"],
   },
   file: {
     list: () => ["files"],
@@ -24,5 +25,7 @@ export const API_QUERY_KEYS: ApiQueryKeys = {
     imports: (id) => ["files", id ?? "", "imports"],
     importedBy: (id) => ["files", id ?? "", "imported-by"],
     nodes: (id) => ["files", id ?? "", "nodes"],
+    importedPackages: (id) => ["files", id ?? "", "imported-packages"],
+    content: (id) => ["files", id ?? "", "content"],
   },
 };

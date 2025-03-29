@@ -18,12 +18,17 @@ export type FileId = number;
 
 export type NodeId = number;
 
-export type Project = {
-  id: ProjectId;
-  name: string;
+export type NodePackageId = number;
+
+type Timestamps = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type Project = {
+  id: ProjectId;
+  name: string;
+} & Timestamps;
 
 export type ProjectDetails = {
   id: ProjectId;
@@ -35,12 +40,10 @@ export type ProjectDetails = {
 export type File = {
   name: string;
   id: FileId;
-  createdAt: Date;
-  updatedAt: Date;
   path: string;
   hash: string;
   projectId: ProjectId;
-};
+} & Timestamps;
 
 export type FileRelationship = {
   from: FileId;
@@ -51,11 +54,21 @@ export type FileNode = {
   hash: string;
   end: number;
   id: NodeId;
-  createdAt: Date;
-  updatedAt: Date;
   fileId: FileId;
   start: number;
   text: string;
   kind: number;
   parentId: Nullable<NodeId>;
-};
+} & Timestamps;
+
+export type ProjectNodePackage = {
+  id: NodePackageId;
+  name: string;
+  version: string;
+  projectId: ProjectId;
+} & Timestamps;
+
+export type FileNodePackageImport = Pick<
+  ProjectNodePackage,
+  "id" | "name" | "version"
+>;

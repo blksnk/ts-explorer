@@ -2,7 +2,9 @@ import { ApiClient } from "./api.client";
 import {
   Project,
   ProjectDetails,
+  ProjectNodePackage,
   type FileId,
+  type FileNodePackageImport,
   type FileRelationship,
   type ProjectId,
 } from "./api.types";
@@ -38,11 +40,20 @@ const projectEndpointsFactory = (client: ApiClient) => {
   const files = async (id: ProjectId) =>
     await client.get<File[]>(`/projects/${id}/files`);
 
+  /**
+   * Gets list of node packages for a project
+   * @param id - ID of project to get node packages for
+   * @returns Promise resolving to array of node packages
+   */
+  const nodePackages = async (id: ProjectId) =>
+    await client.get<ProjectNodePackage[]>(`/projects/${id}/node-packages`);
+
   return {
     list,
     get,
     files,
     details,
+    nodePackages,
   };
 };
 
@@ -89,12 +100,30 @@ const fileEndpointsFactory = (client: ApiClient) => {
   const nodes = async (id: FileId) =>
     await client.get<Node[]>(`/files/${id}/nodes`);
 
+  /**
+   * Gets list of node packages for a file
+   * @param id - ID of file to get node packages for
+   * @returns Promise resolving to array of node packages
+   */
+  const importedPackages = async (id: FileId) =>
+    await client.get<FileNodePackageImport[]>(`/files/${id}/imported-packages`);
+
+  /**
+   * Gets content of a file
+   * @param id - ID of file to get content for
+   * @returns Promise resolving to file content
+   */
+  const content = async (id: FileId) =>
+    await client.get<string>(`/files/${id}/content`);
+
   return {
     list,
     get,
     imports,
     importedBy,
     nodes,
+    importedPackages,
+    content,
   };
 };
 
