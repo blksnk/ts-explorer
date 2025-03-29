@@ -11,12 +11,12 @@
 ## Parser
 
 - [x] Add support for multiple entry points
-- [ ] Add better support for node modules
+- [x] Add better support for node modules
 
 ## Database / Indexer
 
 - [x] Index file contents (text) without nodes
-- [ ] Store node modules in seperate table
+- [x] Store node modules in seperate table
 - [ ] Flag entry files as such in DB
 
 ## Server
@@ -27,6 +27,7 @@
 
 - [ ] Update design
 - [ ] Display project files as nodes
+- [x] Display highlighted file code
 
 ## Stretch goals
 
