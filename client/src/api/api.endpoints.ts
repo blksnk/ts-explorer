@@ -4,8 +4,10 @@ import {
   ProjectDetails,
   ProjectNodePackage,
   type FileId,
+  type FileNode,
   type FileNodePackageImport,
   type FileRelationship,
+  type ProjectFile,
   type ProjectId,
 } from "./api.types";
 
@@ -38,7 +40,7 @@ const projectEndpointsFactory = (client: ApiClient) => {
    * @returns Promise resolving to array of files
    */
   const files = async (id: ProjectId) =>
-    await client.get<File[]>(`/projects/${id}/files`);
+    await client.get<ProjectFile[]>(`/projects/${id}/files`);
 
   /**
    * Gets list of node packages for a project
@@ -67,14 +69,15 @@ const fileEndpointsFactory = (client: ApiClient) => {
    * Gets list of all files
    * @returns Promise resolving to array of files
    */
-  const list = async () => await client.get<File[]>("/files");
+  const list = async () => await client.get<ProjectFile[]>("/files");
 
   /**
    * Gets a single file by ID
    * @param id - ID of file to get
    * @returns Promise resolving to file data
    */
-  const get = async (id: FileId) => await client.get<File>(`/files/${id}`);
+  const get = async (id: FileId) =>
+    await client.get<ProjectFile>(`/files/${id}`);
 
   /**
    * Gets list of files that this file imports
@@ -98,7 +101,7 @@ const fileEndpointsFactory = (client: ApiClient) => {
    * @returns Promise resolving to array of nodes
    */
   const nodes = async (id: FileId) =>
-    await client.get<Node[]>(`/files/${id}/nodes`);
+    await client.get<FileNode[]>(`/files/${id}/nodes`);
 
   /**
    * Gets list of node packages for a file

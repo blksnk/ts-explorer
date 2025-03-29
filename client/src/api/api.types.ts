@@ -37,7 +37,7 @@ export type ProjectDetails = {
   fileImportCount: number;
 };
 
-export type File = {
+export type ProjectFile = {
   name: string;
   id: FileId;
   path: string;

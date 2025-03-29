@@ -7,7 +7,9 @@ type DeepReplace<T, R> = T extends Record<string, unknown>
     }
   : R;
 
-export type ApiQueryKeyFn = (...args: Nullish<string>[]) => string[];
+export type ApiQueryKeyFn = (
+  ...args: Nullish<string | number>[]
+) => (string | number)[];
 
 export type ApiQueryKeys = DeepReplace<ApiEndpoints, ApiQueryKeyFn>;
 

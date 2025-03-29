@@ -5,7 +5,7 @@ import {
   WindowHeader,
   type WindowSlot,
 } from "../../components";
-import { useProjectExplorerContext } from "./ProjectExplorer.context";
+import { useProjectExplorerContext } from "./ProjectExplorer.context.ts";
 
 export const ProjectExplorerWindowHeader: WindowSlot = ({ active }) => {
   const { details } = useProjectExplorerContext();

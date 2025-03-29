@@ -1,9 +1,9 @@
 import { isObject, type Nullish } from "@ubloimmo/front-util";
-import { useApi } from "../../api";
+import { useApi, type ProjectId } from "../../api";
 import { useQuery } from "@tanstack/react-query";
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useMemo } from "react";
 
-const useProjectExplorerStore = (id: Nullish<string>) => {
+export const useProjectExplorerStore = (id: Nullish<ProjectId>) => {
   const api = useApi();
   const projectData = useQuery({
     queryKey: api.queryKeys.project.get(id),
@@ -41,26 +41,11 @@ const useProjectExplorerStore = (id: Nullish<string>) => {
 
 export type ProjectExplorerContext = ReturnType<typeof useProjectExplorerStore>;
 
-const ProjectExplorerContext = createContext<ProjectExplorerContext>({
+export const PROJECT_EXPLORER_CONTEXT = createContext<ProjectExplorerContext>({
   details: null,
   loading: true,
   id: null,
 });
 
-export const ProjectExplorerProvider = ({
-  children,
-  projectId,
-}: {
-  children?: ReactNode;
-  projectId?: Nullish<string>;
-}) => {
-  const store = useProjectExplorerStore(projectId);
-  return (
-    <ProjectExplorerContext.Provider value={store}>
-      {children}
-    </ProjectExplorerContext.Provider>
-  );
-};
-
 export const useProjectExplorerContext = () =>
-  useContext(ProjectExplorerContext);
+  useContext(PROJECT_EXPLORER_CONTEXT);
