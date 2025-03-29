@@ -3,7 +3,7 @@ import { db, schemas } from "../../db";
 import type { AdapterType, CompleteParserConfig } from "../../parser/types";
 import { Logger } from "@ubloimmo/front-util";
 import { deleteFilesIn } from "./file.indexer";
-import { deleteNodePackage, deleteNodePackagesIn } from "./nodePackage.indexer";
+import { deleteNodePackagesIn } from "./nodePackage.indexer";
 
 const logger = Logger();
 
