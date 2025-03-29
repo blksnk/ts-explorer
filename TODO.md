@@ -12,6 +12,7 @@
 
 - [x] Add support for multiple entry points
 - [x] Add better support for node modules
+- [ ] Add support for parsing any public github repo
 
 ## Database / Indexer
 
