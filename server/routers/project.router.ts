@@ -20,7 +20,7 @@ projectRouter.get("/:id", async (req, res) => {
     res.status(404).json({ error: "Project not found" });
     return;
   }
-  res.json({ data: project });
+  res.status(200).json({ data: project });
 });
 
 projectRouter.get("/:id/details", async (req, res) => {
@@ -45,7 +45,7 @@ projectRouter.get("/:id/details", async (req, res) => {
       eq(schemas.file.id, schemas.fileImport.importedFileId)
     );
 
-  res.json({
+  res.status(200).json({
     data: {
       id,
       fileCount: fileCount[0].count,
@@ -61,7 +61,7 @@ projectRouter.get("/:id/files", async (req, res) => {
     .select()
     .from(schemas.file)
     .where(eq(schemas.file.projectId, id));
-  res.json({ data: files });
+  res.status(200).json({ data: files });
 });
 
 projectRouter.get("/:id/node-packages", async (req, res) => {
@@ -70,7 +70,7 @@ projectRouter.get("/:id/node-packages", async (req, res) => {
     .select()
     .from(schemas.nodePackage)
     .where(eq(schemas.nodePackage.projectId, id));
-  res.json({ data: nodePackages });
+  res.status(200).json({ data: nodePackages });
 });
 
 export { projectRouter };

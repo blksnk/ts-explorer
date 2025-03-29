@@ -6,7 +6,7 @@ const fileRouter = Router();
 
 fileRouter.get("/", async (_req, res) => {
   const files = await db.select().from(schemas.file);
-  res.json({ data: files });
+  res.status(200).json({ data: files });
 });
 
 fileRouter.get("/:id", async (req, res) => {
@@ -23,7 +23,7 @@ fileRouter.get("/:id", async (req, res) => {
     res.status(404).json({ error: "File not found" });
     return;
   }
-  res.json({ data: file });
+  res.status(200).json({ data: file });
 });
 
 fileRouter.get("/:id/imports", async (req, res) => {
@@ -42,7 +42,7 @@ fileRouter.get("/:id/imports", async (req, res) => {
     from: id,
     to: importedFileId,
   }));
-  res.json({ data: links });
+  res.status(200).json({ data: links });
 });
 
 fileRouter.get("/:id/imported-by", async (req, res) => {
@@ -61,7 +61,7 @@ fileRouter.get("/:id/imported-by", async (req, res) => {
     from: importingFileId,
     to: id,
   }));
-  res.json({ data: links });
+  res.status(200).json({ data: links });
 });
 
 fileRouter.get("/:id/nodes", async (req, res) => {
@@ -75,7 +75,7 @@ fileRouter.get("/:id/nodes", async (req, res) => {
     .from(schemas.node)
     .where(eq(schemas.node.fileId, id));
 
-  res.json({ data: fileNodes });
+  res.status(200).json({ data: fileNodes });
 });
 
 fileRouter.get("/:id/imported-packages", async (req, res) => {
@@ -97,7 +97,7 @@ fileRouter.get("/:id/imported-packages", async (req, res) => {
       eq(schemas.packageImport.nodePackageId, schemas.nodePackage.id)
     );
 
-  res.json({ data: packageImports });
+  res.status(200).json({ data: packageImports });
 });
 
 fileRouter.get("/:id/content", async (req, res) => {
@@ -116,7 +116,7 @@ fileRouter.get("/:id/content", async (req, res) => {
     res.status(404).json({ error: "File content not found" });
     return;
   }
-  res.json({ data: content });
+  res.status(200).json({ data: content });
 });
 
 export { fileRouter };

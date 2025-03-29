@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import { fileRouter, projectRouter } from "./routers";
 import cors from "cors";
 import { Logger } from "@ubloimmo/front-util";
+import { morgan } from "./middlewares";
 
 const logger = Logger();
 
@@ -12,6 +13,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(morgan);
 
 app.use("/projects", projectRouter);
 app.use("/files", fileRouter);
