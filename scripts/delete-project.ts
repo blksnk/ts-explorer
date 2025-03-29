@@ -1,6 +1,6 @@
 import { Logger } from "@ubloimmo/front-util";
-import { Parser, Config } from "../../parser";
-import { index } from "../../indexer";
+import { Config } from "../parser";
+import { deleteProject } from "../indexer/pg/project.indexer";
 
 const logger = Logger();
 
@@ -11,8 +11,5 @@ const config = {
   ...tsConfig,
 };
 logger.debug(config, "config");
-
-const parserMaps = await Parser.parseProject(config);
-logger.info("done parsing");
-await index(config, parserMaps, "pg");
-logger.info("done indexing");
+await deleteProject(config.projectId);
+logger.info(`Deleted project ${config.projectName} (${config.projectId})`);

@@ -2,10 +2,40 @@ import { eq } from "drizzle-orm";
 import { db, schemas } from "../../db";
 import type { AdapterType, CompleteParserConfig } from "../../parser/types";
 import { Logger } from "@ubloimmo/front-util";
-import { deleteFilesIn } from "./file.indexer";
-import { deleteNodePackagesIn } from "./nodePackage.indexer";
+import { clearFilesIn, deleteFilesIn } from "./file.indexer";
+import { clearNodePackagesIn } from "./nodePackage.indexer";
+import { clearPackageImportsIn } from "./packageImport.indexer";
+import { clearFileContentsIn } from "./fileContent.indexer";
+import { clearFileNodesIn } from "./node.indexer";
+import { clearFileImportsIn } from "./fileImport.indexer";
 
 const logger = Logger();
+
+/**
+ * Clears all data associated with a project from the database without deleting the project record itself
+ * @param {string} projectId - The ID of the project whose data should be cleared
+ * @returns {Promise<boolean>} True if all data was cleared successfully, false if an error occurred
+ */
+export const clearProjectData = async (projectId: string): Promise<boolean> => {
+  try {
+    /// Delete all records that reference other records first
+    // clear node packages & imports
+    await clearPackageImportsIn(projectId);
+    await clearNodePackagesIn(projectId);
+    // clear file contents
+    await clearFileContentsIn(projectId);
+    // clear file nodes
+    await clearFileNodesIn(projectId);
+    // clear file imports
+    await clearFileImportsIn(projectId);
+    // clear files
+    await clearFilesIn(projectId);
+    return true;
+  } catch (e) {
+    logger.error(e, "deleteProjectData");
+    return false;
+  }
+};
 
 /**
  * Deletes a project from the database by its ID
@@ -19,8 +49,7 @@ export const deleteProject = async (
 ): Promise<boolean> => {
   try {
     if (deleteProjectData) {
-      await deleteFilesIn(projectId, true, true, true, true);
-      await deleteNodePackagesIn(projectId);
+      await clearProjectData(projectId);
       logger.log(
         `Deleted project data for project ${projectId}`,
         "deleteProject"

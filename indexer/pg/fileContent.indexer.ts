@@ -32,18 +32,44 @@ export const deleteFileContents = async (fileId: number): Promise<boolean> => {
 };
 
 /**
+ * Deletes all file contents associated with a project from the database
+ * @param {string} projectId - The ID of the project whose file contents should be deleted
+ * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
+ */
+export const clearFileContentsIn = async (
+  projectId: string
+): Promise<boolean> => {
+  try {
+    await db
+      .delete(schemas.fileContent)
+      .where(eq(schemas.fileContent.projectId, projectId));
+    logger.log(
+      `Deleted file contents for project ${projectId}`,
+      "clearFileContentsIn"
+    );
+    return true;
+  } catch (e) {
+    logger.error(e, "clearFileContentsIn");
+    return false;
+  }
+};
+
+/**
  * Formats a file content input object for database insertion
  * @param {number} fileId - The ID of the file to store content for
  * @param {string} content - The content of the file to store
+ * @param {string} projectId - The ID of the project this file belongs to
  * @returns {FileContentInput} A file content input object ready for database insertion
  */
 export const formatFileContentInput = (
   fileId: number,
-  content: string
+  content: string,
+  projectId: string
 ): FileContentInput => {
   return {
     content,
     fileId,
+    projectId,
   };
 };
 

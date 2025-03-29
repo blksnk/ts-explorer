@@ -14,7 +14,7 @@ import type {
 } from "../../parser/types";
 import { mapValues } from "../indexer.utils";
 import { deleteFilesIn, indexFiles } from "./file.indexer";
-import { indexProject } from "./project.indexer";
+import { clearProjectData, indexProject } from "./project.indexer";
 import { formatNodeInput, indexNodeParent, indexNodes } from "./node.indexer";
 import type {
   FileContentInput,
@@ -71,11 +71,13 @@ const indexProjectFiles = async (
  * @param {FileOutput[]} projectFiles - Array of indexed file records to associate nodes with
  * @param {CompleteParserConfig} config - Configuration object containing project settings
  * @param {ParserMaps} parserMaps - Parser maps containing nodes and their relationships
+ * @param {string} projectId - The ID of the project these nodes belong to
  * @returns {Promise<NodeOutput[]>} Array of indexed node records
  */
 const indexProjectNodes = async (
   projectFiles: FileOutput[],
-  parserMaps: ParserMaps
+  parserMaps: ParserMaps,
+  projectId: string
 ): Promise<NodeOutput[]> => {
   if (!projectFiles.length) return [];
   // map nodes to their files, constructing node inputs
@@ -86,7 +88,7 @@ const indexProjectNodes = async (
         ?.map((nodeHash) => parserMaps.nodes.get(nodeHash)) ?? []
     )
       .filter(isObject as Predicate<SourceNode>)
-      .map((node) => formatNodeInput(node, id));
+      .map((node) => formatNodeInput(node, id, projectId));
   });
   // break if no nodes are to be indexed
   if (!nodeInputs.length) return [];
@@ -121,11 +123,13 @@ const indexProjectNodes = async (
  * Indexes all file imports in a project by creating relationships between importing and imported files
  * @param {FileOutput[]} projectFiles - Array of indexed file records to establish import relationships between
  * @param {ParserMaps} parserMaps - Parser maps containing file import relationships
+ * @param {string} projectId - The ID of the project these file imports belong to
  * @returns {Promise<Nullable<FileImportOutput[]>>} Array of indexed file import records if successful, null if failed
  */
 const indexProjectFileImports = async (
   projectFiles: FileOutput[],
-  parserMaps: ParserMaps
+  parserMaps: ParserMaps,
+  projectId: string
 ): Promise<Nullable<FileImportOutput[]>> => {
   if (!projectFiles.length) return [];
   // map file imports t their importing and imported files
@@ -137,7 +141,7 @@ const indexProjectFileImports = async (
           ({ hash }) => hash === importedFileHash
         )?.id;
         if (!importedFileId) return null;
-        return { importingFileId: id, importedFileId };
+        return { importingFileId: id, importedFileId, projectId };
       })
       .filter(isObject as Predicate<FileImportInput>);
   });
@@ -156,18 +160,20 @@ const indexProjectFileImports = async (
  * Indexes file contents for all project files by creating database records
  * @param {FileOutput[]} projectFiles - Array of indexed file records to store contents for
  * @param {ParserMaps} parserMaps - Parser maps containing file contents mapped to file hashes
+ * @param {string} projectId - The ID of the project these file contents belong to
  * @returns {Promise<Nullable<FileContentOutput[]>>} Array of indexed file content records if successful, null if failed
  */
 const indexProjectFileContents = async (
   projectFiles: FileOutput[],
-  parserMaps: ParserMaps
+  parserMaps: ParserMaps,
+  projectId: string
 ): Promise<Nullable<FileContentOutput[]>> => {
   if (!projectFiles.length) return [];
   const fileContentInputs = projectFiles
     .map(({ id, hash }) => {
       const content = parserMaps.files.get(hash)?.content ?? null;
       if (!isString(content)) return null;
-      return formatFileContentInput(id, content);
+      return formatFileContentInput(id, content, projectId);
     })
     .filter(isObject as Predicate<FileContentInput>);
 
@@ -204,12 +210,14 @@ const indexProjectNodePackages = async (
  * @param {FileOutput[]} projectFiles - Array of indexed file records to store package imports for
  * @param {NodePackageOutput[]} projectNodePackages - Array of indexed node package records to link imports to
  * @param {ParserMaps} parserMaps - Parser maps containing file package imports mapped to file hashes
+ * @param {string} projectId - The ID of the project these package imports belong to
  * @returns {Promise<Nullable<PackageImportOutput[]>>} Array of indexed package import records if successful, null if failed
  */
 const indexProjectPackageImports = async (
   projectFiles: FileOutput[],
   projectNodePackages: NodePackageOutput[],
-  parserMaps: ParserMaps
+  parserMaps: ParserMaps,
+  projectId: string
 ): Promise<Nullable<PackageImportOutput[]>> => {
   // break if no files or node packages are indexed
   if (!projectFiles.length || !projectNodePackages.length) return [];
@@ -221,7 +229,7 @@ const indexProjectPackageImports = async (
         const nodePackageId =
           projectNodePackages.find((p) => p.name === name)?.id ?? null;
         if (!isNumber(nodePackageId)) return null;
-        return formatPackageImportInput(fileId, nodePackageId);
+        return formatPackageImportInput(fileId, nodePackageId, projectId);
       })
       .filter(isObject as Predicate<PackageImportInput>);
   });
@@ -256,8 +264,8 @@ export const index = async (
   }
   logger.log(`Indexed project ${config.projectName} (${project.id})`, "index");
 
-  // clear project files before indexing
-  await deleteFilesIn(project.id);
+  // clear project artifacts before indexing
+  await clearProjectData(project.id);
 
   // index project files
   const projectFiles = await indexProjectFiles(
@@ -270,7 +278,7 @@ export const index = async (
   if (!projectFiles?.length) return true;
 
   // index project file contents
-  await indexProjectFileContents(projectFiles, parserMaps);
+  await indexProjectFileContents(projectFiles, parserMaps, project.id);
 
   // index project node packages, then per-file package imports
   const projectNodePackages = await indexProjectNodePackages(
@@ -281,18 +289,19 @@ export const index = async (
     await indexProjectPackageImports(
       projectFiles,
       projectNodePackages,
-      parserMaps
+      parserMaps,
+      project.id
     );
   }
 
   // index project file imports
   if (config.resolveImportedModules) {
-    await indexProjectFileImports(projectFiles, parserMaps);
+    await indexProjectFileImports(projectFiles, parserMaps, project.id);
   }
 
   // index project nodes if file nodes are resolved
   if (config.resolveFileNodes) {
-    await indexProjectNodes(projectFiles, parserMaps);
+    await indexProjectNodes(projectFiles, parserMaps, project.id);
   }
   return true;
 };

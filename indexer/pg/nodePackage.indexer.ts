@@ -34,7 +34,7 @@ export const deleteNodePackage = async (nodePackageId: number) => {
  * @param {string} projectId - The ID of the project to delete node packages for
  * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
  */
-export const deleteNodePackagesIn = async (
+export const clearNodePackagesIn = async (
   projectId: string
 ): Promise<boolean> => {
   try {

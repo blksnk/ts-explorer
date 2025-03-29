@@ -77,19 +77,44 @@ export const deleteFileImport = async (
 };
 
 /**
+ * Deletes all file import records from the database for a given project ID
+ * @param {string} projectId - The ID of the project whose file imports should be deleted
+ * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
+ */
+export const clearFileImportsIn = async (
+  projectId: string
+): Promise<boolean> => {
+  try {
+    await db
+      .delete(schemas.fileImport)
+      .where(eq(schemas.fileImport.projectId, projectId));
+    logger.log(
+      `Deleted file imports for project ${projectId}`,
+      "clearFileImportsIn"
+    );
+    return true;
+  } catch (e) {
+    logger.error(e, "clearFileImportsIn");
+    return false;
+  }
+};
+
+/**
  * Indexes a file import record into the database
  * @param {number} importingFileId - The ID of the importing file
  * @param {number} importedFileId - The ID of the imported file
+ * @param {string} projectId - The ID of the project this file import belongs to
  * @returns {Promise<Nullable<FileImportInput>>} The indexed file import record if successful, null if an error occurred
  */
 export const indexFileImport = async (
   importingFileId: number,
-  importedFileId: number
+  importedFileId: number,
+  projectId: string
 ): Promise<Nullable<FileImportOutput>> => {
   try {
     const fileImports = await db
       .insert(schemas.fileImport)
-      .values({ importingFileId, importedFileId })
+      .values({ importingFileId, importedFileId, projectId })
       .returning();
     const fileImport = fileImports[0];
     if (!fileImport) {

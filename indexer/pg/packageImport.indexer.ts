@@ -34,6 +34,29 @@ export const deletePackageImportIn = async (
 };
 
 /**
+ * Deletes all package imports associated with a project from the database
+ * @param {string} projectId - The ID of the project whose package imports should be deleted
+ * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
+ */
+export const clearPackageImportsIn = async (
+  projectId: string
+): Promise<boolean> => {
+  try {
+    await db
+      .delete(schemas.packageImport)
+      .where(eq(schemas.packageImport.projectId, projectId));
+    logger.log(
+      `Deleted package imports for project ${projectId}`,
+      "clearPackageImportsIn"
+    );
+    return true;
+  } catch (e) {
+    logger.error(e, "clearPackageImportsIn");
+    return false;
+  }
+};
+
+/**
  * Deletes all package imports associated with a node package from the database
  * @param {number} nodePackageId - The ID of the node package whose package imports should be deleted
  * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
@@ -60,15 +83,18 @@ export const deletePackageImport = async (
  * Formats a package import input object for database insertion
  * @param {number} fileId - The ID of the file that imports the package
  * @param {number} nodePackageId - The ID of the imported package node
+ * @param {string} projectId - The ID of the project this package import belongs to
  * @returns {PackageImportInput} A package import input object ready for database insertion
  */
 export const formatPackageImportInput = (
   fileId: number,
-  nodePackageId: number
+  nodePackageId: number,
+  projectId: string
 ): PackageImportInput => {
   return {
     fileId,
     nodePackageId,
+    projectId,
   };
 };
 

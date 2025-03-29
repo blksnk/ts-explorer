@@ -41,14 +41,32 @@ export const deleteFileNodes = async (fileId: number): Promise<boolean> => {
 };
 
 /**
+ * Deletes all nodes associated with a project from the database
+ * @param {string} projectId - The ID of the project whose nodes should be deleted
+ * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
+ */
+export const clearFileNodesIn = async (projectId: string): Promise<boolean> => {
+  try {
+    await db.delete(schemas.node).where(eq(schemas.node.projectId, projectId));
+    logger.log(`Deleted nodes for project ${projectId}`, "clearFileNodesIn");
+    return true;
+  } catch (e) {
+    logger.error(e, "clearFileNodesIn");
+    return false;
+  }
+};
+
+/**
  * Formats a source node into a database node input object
  * @param {SourceNode} sourceNode - The source node to format containing hash, position, text and kind
  * @param {number} fileId - The ID of the file this node belongs to
+ * @param {string} projectId - The ID of the project this node belongs to
  * @returns {NodeInput} A node input object ready for database insertion
  */
 export const formatNodeInput = (
   sourceNode: SourceNode,
-  fileId: number
+  fileId: number,
+  projectId: string
 ): NodeInput => {
   return {
     hash: sourceNode.hash,
@@ -57,6 +75,7 @@ export const formatNodeInput = (
     end: sourceNode.end,
     text: sourceNode.text,
     kind: sourceNode.kind,
+    projectId,
   };
 };
 
@@ -64,14 +83,16 @@ export const formatNodeInput = (
  * Indexes a source node by inserting it into the database
  * @param {SourceNode} sourceNode - The source node to index containing hash, position, text and kind
  * @param {number} fileId - The ID of the file this node belongs to
+ * @param {string} projectId - The ID of the project this node belongs to
  * @returns {Promise<Nullable<NodeOutput>>} The indexed node if successful, null if failed
  */
 export const indexNode = async (
   sourceNode: SourceNode,
-  fileId: number
+  fileId: number,
+  projectId: string
 ): Promise<Nullable<NodeOutput>> => {
   try {
-    const nodeInput = formatNodeInput(sourceNode, fileId);
+    const nodeInput = formatNodeInput(sourceNode, fileId, projectId);
     const nodes = await db.insert(schemas.node).values(nodeInput).returning();
     const node = nodes[0];
     if (!node) {

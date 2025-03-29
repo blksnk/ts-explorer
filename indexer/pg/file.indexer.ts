@@ -6,7 +6,7 @@ import { deleteFileImportBy, deleteFileImportOf } from "./fileImport.indexer";
 import type { SourceFile, SourceFileInput } from "../../parser/types";
 import type { FileInput, FileOutput } from "../../db";
 import type { Nullable } from "@ubloimmo/front-util";
-import { deleteFileContents } from "./fileContent.indexer";
+import { clearFileContentsIn, deleteFileContents } from "./fileContent.indexer";
 import { batchOperation } from "../indexer.utils";
 import { deletePackageImportIn } from "./packageImport.indexer";
 
@@ -56,7 +56,7 @@ export const deleteFile = async (
 };
 
 /**
- * Deletes all files in a project by their project ID
+ * Deletes all files in a project by their project ID, sequentially deleting nodes, file imports, file content and package imports
  * @param {string} projectId - The ID of the project to delete files from
  * @param {boolean} [deleteNodes = true] - Whether to delete the nodes associated with the files
  * @param {boolean} [deleteFileImports = true] - Whether to delete the file imports associated with the files
@@ -99,6 +99,22 @@ export const deleteFilesIn = async (
     return false;
   } catch (e) {
     logger.error(e, "deleteFilesIn");
+    return false;
+  }
+};
+
+/**
+ * Deletes all files in a project directly from the database without cascading deletes
+ * @param {string} projectId - The ID of the project to delete files from
+ * @returns {Promise<boolean>} True if deletion was successful, false if an error occurred
+ */
+export const clearFilesIn = async (projectId: string): Promise<boolean> => {
+  try {
+    await db.delete(schemas.file).where(eq(schemas.file.projectId, projectId));
+    logger.log(`Deleted files for project ${projectId}`, "clearFilesIn");
+    return true;
+  } catch (e) {
+    logger.error(e, "clearFilesIn");
     return false;
   }
 };
