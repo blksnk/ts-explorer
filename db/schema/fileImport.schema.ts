@@ -1,6 +1,7 @@
-import { integer, pgTable } from "drizzle-orm/pg-core";
+import { integer, pgTable, uuid } from "drizzle-orm/pg-core";
 import { file } from "./file.schema";
 import { timestamps } from "../dataTypes";
+import { project } from "./project.schema";
 
 export const fileImport = pgTable("file_imports", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -9,6 +10,9 @@ export const fileImport = pgTable("file_imports", {
     .notNull(),
   importedFileId: integer("imported_file_id")
     .references(() => file.id)
+    .notNull(),
+  projectId: uuid("project_id")
+    .references(() => project.id)
     .notNull(),
   ...timestamps,
 });

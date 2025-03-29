@@ -1,7 +1,8 @@
-import { integer, pgTable, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { nodeHash, timestamps } from "../dataTypes";
 import { file } from "./file.schema";
 import { relations } from "drizzle-orm";
+import { project } from "./project.schema";
 
 export const node = pgTable("nodes", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -14,6 +15,9 @@ export const node = pgTable("nodes", {
   text: text().notNull(),
   kind: integer().notNull(),
   parentId: integer("parent_id"),
+  projectId: uuid("project_id")
+    .references(() => project.id)
+    .notNull(),
   ...timestamps,
 });
 
