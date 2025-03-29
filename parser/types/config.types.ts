@@ -17,7 +17,7 @@ type GithubAdapterConfig = {
 type LocalAdapterConfig = {
   adapter: "local";
   projectRoot: Nullable<string>;
-  entryPoint?: Nullable<string>;
+  entryPoints?: string[];
 };
 
 export type AdapterType = "github" | "local";

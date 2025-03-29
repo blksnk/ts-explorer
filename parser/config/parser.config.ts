@@ -5,13 +5,18 @@ import type {
   AdapterType,
 } from "../types";
 import jsonConfig from "../../tsexplorer.config.json";
-import { isBoolean, isString, type DeepNonNullish } from "@ubloimmo/front-util";
+import {
+  isArray,
+  isBoolean,
+  isString,
+  type DeepNonNullish,
+} from "@ubloimmo/front-util";
 export * from "./ts.config";
 
 const defaultConfig: DefaultConfig = {
   adapter: {
     adapter: "local",
-    entryPoint: null,
+    entryPoints: [],
     projectRoot: null,
   },
   resolveFileNodes: true,
@@ -31,7 +36,11 @@ const validateLocalAdapter = (
   if (!isString(adapter.projectRoot)) {
     return false;
   }
-  if (!isString(adapter.entryPoint)) {
+  if (
+    !isArray(adapter.entryPoints) ||
+    !adapter.entryPoints.length ||
+    !adapter.entryPoints.every(isString)
+  ) {
     return false;
   }
   return true;

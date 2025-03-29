@@ -1,12 +1,19 @@
 import type {
   CompleteParserConfig,
+  FileHash,
   NodeHash,
   ParserMaps,
   ProjectFile,
+  SourceFile,
 } from "../types";
 import { parseSourceFile } from "./file.parser";
 import { parseProjectFile } from "./projectFile.parser";
-import { Logger } from "@ubloimmo/front-util";
+import {
+  isNullish,
+  isObject,
+  Logger,
+  type Predicate,
+} from "@ubloimmo/front-util";
 
 const logger = Logger();
 
@@ -56,14 +63,27 @@ export const parseProject = async (
   logger.info("Begin parsing project...", "parse");
   const start = performance.now();
   const parserMaps = initParserMaps();
-  const entryFile = await parseSourceFile(config.adapter.entryPoint, config);
+  const entryFiles = (
+    await Promise.all(
+      config.adapter.entryPoints.map(
+        async (entryPoint) => await parseSourceFile(entryPoint, config)
+      )
+    )
+  ).filter(isObject as Predicate<SourceFile>);
 
-  if (!entryFile) {
-    logger.error("Entry file not found, aborting", "parse");
+  if (!entryFiles.length) {
+    logger.error("Entry files not found, aborting", "parse");
     return parserMaps;
   }
-  const projectFiles = await parseProjectFile(entryFile, config, new Set());
-  projectFiles.forEach((projectFile) => {
+  const fileHashes = new Set<FileHash>();
+  const uniqueProjectFiles: ProjectFile[] = [];
+  // parse each entry file sequentially
+  for (const entryFile of entryFiles) {
+    logger.log(`Parsing entry file ${entryFile.file.fileName}...`, "parse");
+    const projectFiles = await parseProjectFile(entryFile, config, fileHashes);
+    uniqueProjectFiles.push(...projectFiles);
+  }
+  uniqueProjectFiles.forEach((projectFile) => {
     declareProjectFile(parserMaps, projectFile);
   });
   const end = performance.now();

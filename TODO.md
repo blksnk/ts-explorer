@@ -10,7 +10,7 @@
 
 ## Parser
 
-- [] Add support for multiple entry points
+- [x] Add support for multiple entry points
 
 ## Database / Indexer
 
