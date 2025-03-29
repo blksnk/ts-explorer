@@ -11,11 +11,18 @@ import type {
   ResolvedModule,
   SourceFile,
   TsConfig,
+  NodePackage,
+  NodePackageMap,
+  PackageName,
 } from "../types";
 import { parseSourceFile, resolveImportedModule } from "./file.parser";
 import { Logger } from "@ubloimmo/front-util";
 
-const logger = Logger();
+const logger = Logger({
+  hideLogs: true,
+  hideDebug: true,
+});
+const debugLogger = Logger();
 
 /**
  * Recursively parses a source file and its imported modules into ProjectFile objects
@@ -26,7 +33,8 @@ const logger = Logger();
 export const parseProjectFile = async (
   sourceFile: Nullable<SourceFile>,
   config: ResolverConfig & TsConfig,
-  collectedHashes: Set<FileHash>
+  uniqueFileHashes: Set<FileHash>,
+  uniquePackages: NodePackageMap
 ): Promise<ProjectFile[]> => {
   if (!sourceFile) {
     return [];
@@ -37,7 +45,7 @@ export const parseProjectFile = async (
     "parseProjectFile"
   );
   // add current file to collected hashes to avoid circular dependencies
-  collectedHashes.add(sourceFile.hash);
+  uniqueFileHashes.add(sourceFile.hash);
   // resolve imported modules names to their full file paths
   const resolvedModules = sourceFile.info.importedFiles
     .map(({ fileName }) => resolveImportedModule(sourceFile, fileName, config))
@@ -48,20 +56,48 @@ export const parseProjectFile = async (
       {
         sourceFile,
         imports: [],
+        packageImports: [],
       },
     ];
   }
   // recursively parse imported files
   const imports: FileHash[] = [];
+  const packageImports: PackageName[] = [];
   const importedFiles = await Promise.all(
     resolvedModules.map(async (resolvedModule) => {
-      // skip external library imports if configured
-      if (config.skipNodeModules && resolvedModule.isExternalLibraryImport) {
-        logger.log(
-          `Skipping external library import ${resolvedModule.resolvedFileName}`,
-          "parseProjectFile"
-        );
-        return [];
+      // register external library imports
+      if (resolvedModule.isExternalLibraryImport) {
+        registerNodePackage: {
+          debugLogger.log(
+            `Registering external library import ${resolvedModule.resolvedFileName}`,
+            "parseProjectFile"
+          );
+          // extract package name and version, break if not found
+          const name = resolvedModule.packageId?.name;
+          const version = resolvedModule.packageId?.version;
+          if (!name || !version) break registerNodePackage;
+          // create package object
+          const packageImport: NodePackage = {
+            name,
+            version,
+          };
+          // add package to unique packages if not already present
+          // TODO: determine if this check is necessary, since map keys are unique
+          if (!uniquePackages.has(packageImport.name)) {
+            uniquePackages.set(packageImport.name, packageImport);
+          }
+          // add package to package imports
+          packageImports.push(packageImport.name);
+        }
+
+        // skip external library imports if configured
+        if (config.skipNodeModules) {
+          debugLogger.log(
+            `Skipping external library import ${resolvedModule.resolvedFileName}`,
+            "parseProjectFile"
+          );
+          return [];
+        }
       }
       // parse imported file
       const importedFile = await parseSourceFile(
@@ -73,7 +109,7 @@ export const parseProjectFile = async (
         // mark this file as an import of the current file
         imports.push(importedFile.hash);
         // if file is already parsed, skip it
-        if (collectedHashes.has(importedFile.hash)) {
+        if (uniqueFileHashes.has(importedFile.hash)) {
           logger.log(
             `Skipping already parsed file ${importedFile.file.fileName}`,
             "parseProjectFile"
@@ -81,10 +117,15 @@ export const parseProjectFile = async (
           return [];
         }
         // add imported file to collected hashes to avoid circular dependencies
-        collectedHashes.add(importedFile.hash);
+        uniqueFileHashes.add(importedFile.hash);
       }
       // recursively parse imported file if not already parsed
-      return await parseProjectFile(importedFile, config, collectedHashes);
+      return await parseProjectFile(
+        importedFile,
+        config,
+        uniqueFileHashes,
+        uniquePackages
+      );
     })
   );
 
@@ -95,6 +136,7 @@ export const parseProjectFile = async (
   resultMap.set(sourceFile.hash, {
     sourceFile,
     imports,
+    packageImports,
   });
 
   // add imported files to result map while ensuring no duplicates

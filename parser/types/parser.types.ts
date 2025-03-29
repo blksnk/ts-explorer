@@ -4,6 +4,7 @@ import * as ts from "typescript";
 export type Hash = string;
 export type FileHash = Hash;
 export type NodeHash = Hash;
+export type PackageName = string;
 
 export type SourceNode = {
   node: ts.Node;
@@ -25,9 +26,15 @@ export type SourceFile = {
 
 export type ResolvedModule = ts.ResolvedModuleFull;
 
+export type NodePackage = {
+  name: PackageName;
+  version: string;
+};
+
 export type ProjectFile = {
   sourceFile: SourceFile;
   imports: FileHash[];
+  packageImports: PackageName[];
 };
 
 export type SourceFileInput = Omit<SourceFile, "nodes">;
@@ -58,6 +65,16 @@ export type SourceFileNodeMap = Map<FileHash, NodeHash[]>;
 export type SourceNodeParentMap = Map<NodeHash, NodeHash>;
 
 /**
+ * Maps a package name to the package object
+ */
+export type NodePackageMap = Map<PackageName, NodePackage>;
+
+/**
+ * Maps a file hash to an array of package names that it imports
+ */
+export type SourceFileNodePackageMap = Map<FileHash, PackageName[]>;
+
+/**
  * A data structure that stores all parsed files, nodes, and their relationships
  */
 export type ParserMaps = {
@@ -81,4 +98,12 @@ export type ParserMaps = {
    * Maps a node hash to the hash of the node that is its parent
    */
   nodeParents: SourceNodeParentMap;
+  /**
+   * Maps a package name to the package object
+   */
+  packages: NodePackageMap;
+  /**
+   * Maps a file hash to an array of package names that it imports
+   */
+  filePackages: SourceFileNodePackageMap;
 };

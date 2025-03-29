@@ -8,12 +8,7 @@ import type {
 } from "../types";
 import { parseSourceFile } from "./file.parser";
 import { parseProjectFile } from "./projectFile.parser";
-import {
-  isNullish,
-  isObject,
-  Logger,
-  type Predicate,
-} from "@ubloimmo/front-util";
+import { isObject, Logger, type Predicate } from "@ubloimmo/front-util";
 
 const logger = Logger();
 
@@ -28,6 +23,8 @@ const initParserMaps = (): ParserMaps => {
     fileNodes: new Map(),
     imports: new Map(),
     nodeParents: new Map(),
+    packages: new Map(),
+    filePackages: new Map(),
   };
 };
 
@@ -38,7 +35,7 @@ const initParserMaps = (): ParserMaps => {
  */
 const declareProjectFile = (
   parserMaps: ParserMaps,
-  { sourceFile: { nodes, ...sourceFile }, imports }: ProjectFile
+  { sourceFile: { nodes, ...sourceFile }, imports, packageImports }: ProjectFile
 ) => {
   parserMaps.files.set(sourceFile.hash, sourceFile);
   const nodeHashes: NodeHash[] = [];
@@ -49,6 +46,7 @@ const declareProjectFile = (
   });
   parserMaps.fileNodes.set(sourceFile.hash, nodeHashes);
   parserMaps.imports.set(sourceFile.hash, imports);
+  parserMaps.filePackages.set(sourceFile.hash, packageImports);
 };
 
 /**
@@ -80,7 +78,12 @@ export const parseProject = async (
   // parse each entry file sequentially
   for (const entryFile of entryFiles) {
     logger.log(`Parsing entry file ${entryFile.file.fileName}...`, "parse");
-    const projectFiles = await parseProjectFile(entryFile, config, fileHashes);
+    const projectFiles = await parseProjectFile(
+      entryFile,
+      config,
+      fileHashes,
+      parserMaps.packages
+    );
     uniqueProjectFiles.push(...projectFiles);
   }
   uniqueProjectFiles.forEach((projectFile) => {
@@ -92,5 +95,7 @@ export const parseProject = async (
   logger.log(parserMaps.nodes.size, "nodes parsed");
   logger.log(parserMaps.fileNodes.size, "file nodes parsed");
   logger.log(parserMaps.imports.size, "imports parsed");
+  logger.log(parserMaps.packages.size, "unique imported packages parsed");
+  logger.log(parserMaps.filePackages.size, "file packages parsed");
   return parserMaps;
 };
