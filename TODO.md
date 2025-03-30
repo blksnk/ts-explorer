@@ -1,5 +1,10 @@
 # TODO
 
+## Documentation
+
+- [ ] Write README
+- [ ] Generate API documentation
+
 ## Project structure
 
 - [x] Split parser / db / indexer / server / client codebases
@@ -27,8 +32,11 @@
 ## Client
 
 - [ ] Update design
+  - [x] Project details page
+  - [ ] Project list
 - [x] Display project files as nodes
 - [x] Display highlighted file code
+
 - [ ] Implement layout simulation for file node tree
 - [ ] Display imported node packages in node tree
 
