@@ -145,6 +145,7 @@ const formatFileInput = (
     name,
     hash: sourceFile.hash,
     projectId,
+    isEntrypoint: sourceFile.isEntrypoint ?? false,
   };
 };
 

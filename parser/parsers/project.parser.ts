@@ -65,7 +65,7 @@ export const parseProject = async (
   const entryFiles = (
     await Promise.all(
       config.adapter.entryPoints.map(
-        async (entryPoint) => await parseSourceFile(entryPoint, config)
+        async (entryPoint) => await parseSourceFile(entryPoint, config, true)
       )
     )
   ).filter(isObject as Predicate<SourceFile>);

@@ -79,7 +79,8 @@ export const resolveImportedModule = (
  */
 export const parseSourceFile = async (
   fileName: string,
-  config: ResolverConfig
+  config: ResolverConfig,
+  isEntrypoint: boolean = false
 ): Promise<Nullable<SourceFile>> => {
   try {
     // get file handle
@@ -116,6 +117,7 @@ export const parseSourceFile = async (
       hash,
       nodes,
       content,
+      isEntrypoint,
     };
   } catch (error) {
     logger.error(error, "getSourceFile");

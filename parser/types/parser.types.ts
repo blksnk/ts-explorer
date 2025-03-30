@@ -22,6 +22,7 @@ export type SourceFile = {
   hash: FileHash;
   nodes: SourceNode[];
   content: string;
+  isEntrypoint?: boolean;
 };
 
 export type ResolvedModule = ts.ResolvedModuleFull;

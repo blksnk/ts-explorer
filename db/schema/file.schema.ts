@@ -1,4 +1,4 @@
-import { integer, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { project } from "./project.schema";
 import { fileHash, timestamps } from "../dataTypes";
 import { relations } from "drizzle-orm";
@@ -8,6 +8,7 @@ export const file = pgTable("files", {
   path: text().notNull(),
   name: text().notNull(),
   hash: fileHash.notNull().unique(),
+  isEntrypoint: boolean("is_entrypoint").notNull().default(false),
   projectId: uuid("project_id")
     .references(() => project.id)
     .notNull(),
