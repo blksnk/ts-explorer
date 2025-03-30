@@ -18,7 +18,7 @@
 
 - [x] Index file contents (text) without nodes
 - [x] Store node modules in seperate table
-- [ ] Flag entry files as such in DB
+- [x] Flag entrypoint files as such in DB
 
 ## Server
 
@@ -27,8 +27,10 @@
 ## Client
 
 - [ ] Update design
-- [ ] Display project files as nodes
+- [x] Display project files as nodes
 - [x] Display highlighted file code
+- [ ] Implement layout simulation for file node tree
+- [ ] Display imported node packages in node tree
 
 ## Stretch goals
 
