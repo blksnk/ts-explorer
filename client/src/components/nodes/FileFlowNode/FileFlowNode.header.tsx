@@ -1,12 +1,13 @@
 import {
   FlexColumnLayout,
+  FlexRowLayout,
   GridItem,
   StaticIcon,
   Text,
   type ColorKeyOrWhite,
   type PaletteColor,
 } from "@ubloimmo/uikit";
-import { useMemo, type ReactNode } from "react";
+import { Fragment, useMemo, type ReactNode } from "react";
 import styled from "styled-components";
 import type { FileFlowNodeHeaderProps } from "./FileFlowNode.types";
 
@@ -36,21 +37,35 @@ export const FileFlowNodeHeader = ({
     [selected]
   );
 
-  const path = useMemo(() => data.path.replaceAll("/", " / "), [data.path]);
+  const pathParts = useMemo(() => data.path.split("/"), [data.path]);
 
   return (
     <Header>
       <GridItem>
-        <StaticIcon name="FileCode" color={iconColor} size="xs" />
+        <StaticIcon name="FileEarmarkCode" color={iconColor} size="xs" />
       </GridItem>
       <GridItem fill="force">
         <Content gap="s-1">
           <Text size="m" weight="medium" color={textColor} fill>
             {data.name}
           </Text>
-          <Text size="xs" color={subTextColor} fill>
-            {path}
-          </Text>
+          <FlexRowLayout fill="row" wrap>
+            {pathParts.map((part, index) => {
+              const key = `${part}-${index}`;
+              return (
+                <Fragment key={key}>
+                  {index > 0 && (
+                    <Text size="xs" color={subTextColor}>
+                      /
+                    </Text>
+                  )}
+                  <Text size="xs" color={subTextColor}>
+                    {part}
+                  </Text>
+                </Fragment>
+              );
+            })}
+          </FlexRowLayout>
         </Content>
       </GridItem>
     </Header>

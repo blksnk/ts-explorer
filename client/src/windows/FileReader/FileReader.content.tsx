@@ -76,7 +76,6 @@ const CodeContainer = styled.div<{ $active?: boolean }>`
       pre > * {
         opacity: 0.8;
         /* mix-blend-mode: luminosity; */
-        filter: grayscale(0.5);
       }
     `}
 `;

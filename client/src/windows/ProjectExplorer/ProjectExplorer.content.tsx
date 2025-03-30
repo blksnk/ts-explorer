@@ -1,118 +1,44 @@
-import { customNodes, type WindowSlot } from "../../components";
+import { NodeGraph, type WindowSlot } from "../../components";
 import { useProjectExplorerContext } from "./ProjectExplorer.context";
-import styled from "styled-components";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useResult } from "../../hooks";
-import {
-  applyEdgeChanges,
-  applyNodeChanges,
-  ReactFlow,
-  type Edge,
-  type EdgeChange,
-  type Node,
-  type NodeChange,
-  type ProOptions,
-} from "@xyflow/react";
+import { useCallback } from "react";
 import "@xyflow/react/dist/style.css";
-import type { ProjectFile } from "../../api";
+import { useApi, type ProjectFile } from "../../api";
 import { useProjectDetailsContext } from "../../pages/ProjectDetails/ProjectDetails.context";
-
-const proOptions: ProOptions = {
-  hideAttribution: true,
-};
-
-const NODE_LIMIT = 10;
-const RANDOM_OFFSET = 1_000;
+import { GetInitialNodesFn } from "../../components/NodeGraph/NodeGraph.types";
+import { isNull, type Nullable } from "@ubloimmo/front-util";
 
 export const ProjectExplorerContent: WindowSlot = () => {
-  const { files: filesResult, fileImports: fileImportsResult } =
-    useProjectExplorerContext();
+  const { id } = useProjectExplorerContext();
   const { setSelectedFile } = useProjectDetailsContext();
 
-  const [files] = useResult(filesResult, []);
-  const [fileImports] = useResult(fileImportsResult, []);
-  const [nodes, setNodes] = useState<Node<ProjectFile, "file">[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
+  const api = useApi();
 
-  const nodeIds = useMemo(() => nodes.map(({ id }) => id), [nodes]);
-  useEffect(() => {
-    if (files.length <= nodes.length) return;
-    setNodes(
-      files.slice(0, NODE_LIMIT).map(
-        (file): Node<ProjectFile, "file"> => ({
-          id: String(file.id),
-          data: file,
-          type: "file",
-          position: {
-            x: Math.random() * RANDOM_OFFSET,
-            y: Math.random() * RANDOM_OFFSET,
-          },
-          origin: [0.5, 0.5],
-        })
-      )
-    );
-  }, [files, nodes.length]);
+  const getInitialNodes = useCallback<
+    GetInitialNodesFn<number, ProjectFile, "file">
+  >(async () => {
+    if (!id) return [];
+    const entryPoints = await api.endpoints.project.entrypoints(id);
+    if (!entryPoints.data) return [];
+    return entryPoints.data.map((data) => ({
+      data,
+      type: "file",
+    }));
+  }, [api.endpoints.project, id]);
 
-  useEffect(() => {
-    if (fileImports.length <= edges.length || !nodes.length) return;
-    setEdges(
-      fileImports
-        .filter(
-          ({ importingFileId, importedFileId }) =>
-            nodeIds.includes(String(importedFileId)) &&
-            nodeIds.includes(String(importingFileId))
-        )
-        .map(
-          (fileImport): Edge => ({
-            id: String(fileImport.id),
-            source: String(fileImport.importedFileId),
-            target: String(fileImport.importingFileId),
-            animated: true,
-          })
-        )
-    );
-  }, [fileImports, edges.length, nodes.length, nodeIds]);
-
-  const onNodesChange = useCallback(
-    (changes: NodeChange<Node<ProjectFile, "file">>[]) => {
-      const selectionChanges = changes.filter(
-        (change) => change.type === "select"
-      );
-      if (selectionChanges.length) {
-        const selectedNodeId = selectionChanges.find(
-          (change) => change.selected
-        )?.id;
-        setSelectedFile(selectedNodeId ? parseInt(selectedNodeId) : null);
-      }
-      setNodes((nds) => applyNodeChanges(changes, nds));
+  const onNodeSelectionChange = useCallback(
+    (fileId: Nullable<number>) => {
+      if (isNull(fileId)) return;
+      setSelectedFile(fileId);
     },
     [setSelectedFile]
   );
 
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange<Edge>[]) =>
-      setEdges((eds) => applyEdgeChanges(changes, eds)),
-    []
-  );
-
   return (
-    <NodesContainer>
-      <ReactFlow
-        nodeTypes={customNodes}
-        nodes={nodes}
-        edges={edges}
-        fitView
-        proOptions={proOptions}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-      />
-    </NodesContainer>
+    <NodeGraph
+      nodeTypes={["file"]}
+      getInitialNodes={getInitialNodes}
+      initialEdges={[]}
+      onNodeSelectionChange={onNodeSelectionChange}
+    />
   );
 };
-
-const NodesContainer = styled.div`
-  height: 100%;
-  max-height: 100%;
-  width: 100%;
-  overflow: hidden;
-`;

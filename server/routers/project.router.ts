@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, schemas } from "../../db";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 
 const projectRouter = Router();
 
@@ -62,6 +62,17 @@ projectRouter.get("/:id/files", async (req, res) => {
     .from(schemas.file)
     .where(eq(schemas.file.projectId, id));
   res.status(200).json({ data: files });
+});
+
+projectRouter.get("/:id/entrypoints", async (req, res) => {
+  const { id } = req.params;
+  const entrypoints = await db
+    .select()
+    .from(schemas.file)
+    .where(
+      and(eq(schemas.file.projectId, id), eq(schemas.file.isEntrypoint, true))
+    );
+  res.status(200).json({ data: entrypoints });
 });
 
 projectRouter.get("/:id/node-packages", async (req, res) => {

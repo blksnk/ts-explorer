@@ -7,7 +7,6 @@ import {
   type FileId,
   type FileNode,
   type FileNodePackageImport,
-  type FileRelationship,
   type ProjectFile,
   type ProjectFileImport,
   type ProjectId,
@@ -60,6 +59,9 @@ const projectEndpointsFactory = (client: ApiClient) => {
   const fileImports = async (id: ProjectId) =>
     await client.get<ProjectFileImport[]>(`/projects/${id}/file-imports`);
 
+  const entrypoints = async (id: ProjectId) =>
+    await client.get<ProjectFile[]>(`/projects/${id}/entrypoints`);
+
   return {
     list,
     get,
@@ -67,6 +69,7 @@ const projectEndpointsFactory = (client: ApiClient) => {
     details,
     nodePackages,
     fileImports,
+    entrypoints,
   };
 };
 
@@ -96,7 +99,7 @@ const fileEndpointsFactory = (client: ApiClient) => {
    * @returns Promise resolving to array of file relationships
    */
   const imports = async (id: FileId) =>
-    await client.get<FileRelationship[]>(`/files/${id}/imports`);
+    await client.get<ProjectFile[]>(`/files/${id}/imports`);
 
   /**
    * Gets list of files that import this file
@@ -104,7 +107,7 @@ const fileEndpointsFactory = (client: ApiClient) => {
    * @returns Promise resolving to array of file relationships
    */
   const importedBy = async (id: FileId) =>
-    await client.get<FileRelationship[]>(`/files/${id}/imported-by`);
+    await client.get<ProjectFile[]>(`/files/${id}/imported-by`);
 
   /**
    * Gets list of AST nodes for a file

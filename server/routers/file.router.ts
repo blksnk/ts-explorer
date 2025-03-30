@@ -34,17 +34,22 @@ fileRouter.get("/:id/imports", async (req, res) => {
     res.status(400).json({ error: "Invalid file id" });
     return;
   }
-  const imports = await db
+  const importedFiles = await db
     .select({
-      importedFileId: schemas.fileImport.importedFileId,
+      id: schemas.file.id,
+      name: schemas.file.name,
+      path: schemas.file.path,
+      isEntrypoint: schemas.file.isEntrypoint,
+      projectId: schemas.file.projectId,
     })
     .from(schemas.fileImport)
-    .where(eq(schemas.fileImport.importingFileId, id));
-  const links = imports.map(({ importedFileId }) => ({
-    from: id,
-    to: importedFileId,
-  }));
-  res.status(200).json({ data: links });
+    .where(eq(schemas.fileImport.importingFileId, id))
+    .innerJoin(
+      schemas.file,
+      eq(schemas.fileImport.importedFileId, schemas.file.id)
+    );
+
+  res.status(200).json({ data: importedFiles });
 });
 
 fileRouter.get("/:id/imported-by", async (req, res) => {
@@ -53,17 +58,22 @@ fileRouter.get("/:id/imported-by", async (req, res) => {
     res.status(400).json({ error: "Invalid file id" });
     return;
   }
-  const imports = await db
+  const importingFiles = await db
     .select({
-      importingFileId: schemas.fileImport.importingFileId,
+      id: schemas.file.id,
+      name: schemas.file.name,
+      path: schemas.file.path,
+      isEntrypoint: schemas.file.isEntrypoint,
+      projectId: schemas.file.projectId,
     })
     .from(schemas.fileImport)
-    .where(eq(schemas.fileImport.importedFileId, id));
-  const links = imports.map(({ importingFileId }) => ({
-    from: importingFileId,
-    to: id,
-  }));
-  res.status(200).json({ data: links });
+    .where(eq(schemas.fileImport.importedFileId, id))
+    .innerJoin(
+      schemas.file,
+      eq(schemas.fileImport.importingFileId, schemas.file.id)
+    );
+
+  res.status(200).json({ data: importingFiles });
 });
 
 fileRouter.get("/:id/nodes", async (req, res) => {

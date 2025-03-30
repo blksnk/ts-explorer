@@ -21,6 +21,7 @@ export const API_QUERY_KEYS: ApiQueryKeys = {
     details: (id) => ["projects", id ?? "", "details"],
     nodePackages: (id) => ["projects", id ?? "", "node-packages"],
     fileImports: (id) => ["projects", id ?? "", "file-imports"],
+    entrypoints: (id) => ["projects", id ?? "", "entrypoints"],
   },
   file: {
     list: () => ["files"],
