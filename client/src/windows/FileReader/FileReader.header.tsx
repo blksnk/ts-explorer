@@ -11,10 +11,9 @@ import { Text } from "@ubloimmo/uikit";
  * @returns {ReactNode} Header component with file path or loading state
  */
 export const FileReaderWindowHeader: WindowSlot = ({ active }): ReactNode => {
-  const { file } = useFileReaderContext();
+  const { file, loading } = useFileReaderContext();
 
   const normalizedPath = useMemo(() => {
-    console.log(file);
     if (!isString(file?.path)) return null;
     return file.path
       .split("/")
@@ -28,7 +27,11 @@ export const FileReaderWindowHeader: WindowSlot = ({ active }): ReactNode => {
       active={active}
       icon="Code"
       title={
-        normalizedPath ? (
+        loading ? (
+          <Text size="s" color="gray-400">
+            Loading...
+          </Text>
+        ) : normalizedPath ? (
           <Text
             size="s"
             weight="medium"
@@ -40,7 +43,7 @@ export const FileReaderWindowHeader: WindowSlot = ({ active }): ReactNode => {
           </Text>
         ) : (
           <Text size="s" color="gray-400">
-            Loading...
+            No file selected
           </Text>
         )
       }

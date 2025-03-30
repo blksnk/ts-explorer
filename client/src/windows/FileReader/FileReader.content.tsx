@@ -64,18 +64,19 @@ const CodeContainer = styled.div<{ $active?: boolean }>`
 
     &,
     & * {
-      font-family: "JetBrains Mono";
+      font-family: "JetBrains Mono" !important;
       line-height: var(--s-5);
+      font-weight: var(--text-weight-medium);
       font-size: var(--text-s);
     }
   }
   ${({ $active }) =>
     !$active &&
     css`
-      pre {
+      pre > * {
         opacity: 0.8;
-        /* filter: grayscale(0.8); */
-        mix-blend-mode: color-burn;
+        /* mix-blend-mode: luminosity; */
+        filter: grayscale(0.5);
       }
     `}
 `;

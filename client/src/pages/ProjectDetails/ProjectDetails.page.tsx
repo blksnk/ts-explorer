@@ -1,17 +1,22 @@
 import { useParams } from "react-router";
 import { ProjectExplorerWindow } from "../../windows/ProjectExplorer/ProjectExplorer.window";
 import { FileReaderWindow } from "../../windows/FileReader/FileReader.window";
-import { GridLayout } from "@ubloimmo/uikit";
+import { GridLayout, GridTemplate, useStatic } from "@ubloimmo/uikit";
 import styled from "styled-components";
+import { ProjectDetailsProvider } from "./ProjectDetails.provider";
 
 export const ProjectDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
 
+  const columns = useStatic<GridTemplate>(["2fr", "1fr"]);
+
   return (
-    <WindowContainer fill gap="s-2" columns={2}>
-      <ProjectExplorerWindow projectId={id} />
-      <FileReaderWindow fileId={2579} active />
-    </WindowContainer>
+    <ProjectDetailsProvider>
+      <WindowContainer fill gap="s-2" columns={columns}>
+        <ProjectExplorerWindow projectId={id} />
+        <FileReaderWindow />
+      </WindowContainer>
+    </ProjectDetailsProvider>
   );
 };
 

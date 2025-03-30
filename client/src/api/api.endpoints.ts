@@ -9,6 +9,7 @@ import {
   type FileNodePackageImport,
   type FileRelationship,
   type ProjectFile,
+  type ProjectFileImport,
   type ProjectId,
 } from "./api.types";
 
@@ -51,12 +52,21 @@ const projectEndpointsFactory = (client: ApiClient) => {
   const nodePackages = async (id: ProjectId) =>
     await client.get<ProjectNodePackage[]>(`/projects/${id}/node-packages`);
 
+  /**
+   * Gets list of file imports for a project
+   * @param id - ID of project to get file imports for
+   * @returns Promise resolving to array of file imports
+   */
+  const fileImports = async (id: ProjectId) =>
+    await client.get<ProjectFileImport[]>(`/projects/${id}/file-imports`);
+
   return {
     list,
     get,
     files,
     details,
     nodePackages,
+    fileImports,
   };
 };
 

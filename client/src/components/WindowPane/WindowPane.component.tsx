@@ -1,31 +1,25 @@
 import styled from "styled-components";
 import type { WindowPaneProps } from "./WindowPane.types";
-import { FlexRowLayout, GridLayout, GridTemplate } from "@ubloimmo/uikit";
-import { useMemo } from "react";
+import { FlexRowLayout, GridLayout } from "@ubloimmo/uikit";
+import { useCallback } from "react";
 
-export const WindowPane = ({
+export const WindowPane = <TIdentifier extends string>({
+  identifier,
   Header,
   Content,
   SideBar,
   active,
-}: WindowPaneProps) => {
-  const rows = useMemo<GridTemplate>(() => {
-    if (Header) {
-      if (SideBar || Content) {
-        return ["s-9", "1fr"];
-      }
-      return ["s-9"];
-    }
-    return ["1fr"];
-  }, [Header, SideBar, Content]);
+  onSelect,
+}: WindowPaneProps<TIdentifier>) => {
+  const selectOnClick = useCallback(() => {
+    if (onSelect) onSelect(identifier);
+  }, [onSelect, identifier]);
 
   return (
     <WindowContainer
       as="section"
-      rows={rows}
-      columns={["1fr"]}
       className={active ? "active" : ""}
-      gap={0}
+      onClick={selectOnClick}
     >
       {Header && <Header active={active} />}
       {(SideBar || Content) && (

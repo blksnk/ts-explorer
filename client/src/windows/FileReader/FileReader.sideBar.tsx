@@ -8,12 +8,12 @@ export const FileReaderSideBar: WindowSlot = ({ active }) => {
   const { lineCount } = useFileReaderContext();
 
   const lineNumbers = useMemo(() => {
-    if (!lineCount) return ["00"];
+    if (!lineCount) return [];
     return arrayOf(lineCount, (index) => String(index + 1).padStart(2, "0"));
   }, [lineCount]);
 
   const color = useMemo<PaletteColor>(
-    () => (active ? "primary-medium" : "gray-200"),
+    () => (active ? ("gray-600-70" as PaletteColor) : "gray-200"),
     [active]
   );
 

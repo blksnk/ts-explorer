@@ -43,7 +43,14 @@ export type ProjectFile = {
   path: string;
   hash: string;
   projectId: ProjectId;
+  isEntrypoint: boolean;
 } & Timestamps;
+
+export type ProjectFileImport = {
+  id: number;
+  importedFileId: FileId;
+  importingFileId: FileId;
+};
 
 export type FileRelationship = {
   from: FileId;

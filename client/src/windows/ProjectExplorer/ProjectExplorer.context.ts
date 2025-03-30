@@ -15,9 +15,22 @@ export const useProjectExplorerStore = (id: Nullish<ProjectId>) => {
     queryFn: () => api.endpoints.project.details(id ?? ""),
   });
 
+  const projectFiles = useQuery({
+    queryKey: api.queryKeys.project.files(id),
+    queryFn: () => api.endpoints.project.files(id ?? ""),
+  });
+
+  const projectFileImports = useQuery({
+    queryKey: api.queryKeys.project.fileImports(id),
+    queryFn: () => api.endpoints.project.fileImports(id ?? ""),
+  });
+
   const loading = useMemo(
-    () => projectData.isLoading || projectDetails.isLoading,
-    [projectData.isLoading, projectDetails.isLoading]
+    () =>
+      projectData.isLoading ||
+      projectDetails.isLoading ||
+      projectFiles.isLoading,
+    [projectData.isLoading, projectDetails.isLoading, projectFiles.isLoading]
   );
 
   const details = useMemo(() => {
@@ -36,6 +49,8 @@ export const useProjectExplorerStore = (id: Nullish<ProjectId>) => {
     details,
     loading,
     id,
+    files: projectFiles.data,
+    fileImports: projectFileImports.data,
   };
 };
 
@@ -45,6 +60,8 @@ export const PROJECT_EXPLORER_CONTEXT = createContext<ProjectExplorerContext>({
   details: null,
   loading: true,
   id: null,
+  files: undefined,
+  fileImports: undefined,
 });
 
 export const useProjectExplorerContext = () =>

@@ -73,4 +73,17 @@ projectRouter.get("/:id/node-packages", async (req, res) => {
   res.status(200).json({ data: nodePackages });
 });
 
+projectRouter.get("/:id/file-imports", async (req, res) => {
+  const { id } = req.params;
+  const fileImports = await db
+    .select({
+      importedFileId: schemas.fileImport.importedFileId,
+      importingFileId: schemas.fileImport.importingFileId,
+      id: schemas.fileImport.id,
+    })
+    .from(schemas.fileImport)
+    .where(eq(schemas.fileImport.projectId, id));
+  res.status(200).json({ data: fileImports });
+});
+
 export { projectRouter };

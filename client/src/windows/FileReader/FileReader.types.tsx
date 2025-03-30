@@ -3,5 +3,4 @@ import type { FileId } from "../../api";
 
 export type FileReaderProps = {
   fileId?: Nullish<FileId>;
-  active?: boolean;
 };
