@@ -5,17 +5,16 @@ import { FileFlowNodeHeader } from "./FileFlowNode.header";
 import { Handle, Position, useInternalNode } from "@xyflow/react";
 import { useApi, type ProjectFile } from "../../../api";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { NodeLine } from "../../NodeLine";
 import { useNodeGraphContext } from "../../NodeGraph";
 import { computeRelativeNodeOffsets, NODE_WIDTH } from "./FileFlowNode.utils";
 
 export const FileFlowNode = ({ data, selected, id }: FileFlowNodeProps) => {
   const api = useApi();
-  const { addConnectedNodes } = useNodeGraphContext<
+  const { addConnectedNodes, connectToExistingNodes } = useNodeGraphContext<
     number,
-    ProjectFile,
-    "file"
+    ProjectFile
   >();
 
   const internalNode = useInternalNode(id);
@@ -57,11 +56,6 @@ export const FileFlowNode = ({ data, selected, id }: FileFlowNodeProps) => {
     addConnectedNodes(id, nodeDefinitions, "source");
   }, [addConnectedNodes, id, importsFrom.data, internalNode]);
 
-  const loadImportsFromNodesOnClick = useMemo(
-    () => (importsFromCount ? loadImportsFromNodes : null),
-    [importsFromCount, loadImportsFromNodes]
-  );
-
   const loadImportedByNodes = useCallback(() => {
     if (!importedBy.data?.data?.length || !internalNode) return;
     const relativeOffsets = computeRelativeNodeOffsets(
@@ -80,42 +74,65 @@ export const FileFlowNode = ({ data, selected, id }: FileFlowNodeProps) => {
     addConnectedNodes(id, nodeDefinitions, "target");
   }, [addConnectedNodes, id, importedBy.data, internalNode]);
 
+  const loadImportsFromNodesOnClick = useMemo(
+    () => (importsFromCount ? loadImportsFromNodes : null),
+    [importsFromCount, loadImportsFromNodes]
+  );
+
   const loadImportedByNodesOnClick = useMemo(
     () => (importedByFilesCount ? loadImportedByNodes : null),
     [importedByFilesCount, loadImportedByNodes]
   );
 
+  const linkedExistingImportedBy = useRef(false);
+  const linkedExistingImportsFrom = useRef(false);
+
+  useEffect(() => {
+    if (importsFrom.data?.data?.length && !linkedExistingImportsFrom.current) {
+      linkedExistingImportsFrom.current = true;
+      connectToExistingNodes(
+        id,
+        importsFrom.data.data.map(({ id }) => id),
+        "source"
+      );
+    }
+  }, [connectToExistingNodes, id, importsFrom.data?.data]);
+
+  useEffect(() => {
+    if (importedBy.data?.data?.length && !linkedExistingImportedBy.current) {
+      linkedExistingImportedBy.current = true;
+      connectToExistingNodes(
+        id,
+        importedBy.data.data.map(({ id }) => id),
+        "target"
+      );
+    }
+  }, [importedBy.data?.data, id, connectToExistingNodes]);
+
   return (
-    <>
-      <NodeContainer $selected={selected}>
-        <FileFlowNodeHeader data={data} selected={selected} />
-        {data.isEntrypoint && (
-          <NodeLine
-            icon="SquircleArrowBottom"
-            label="Project entrypoint"
-            active
-          />
-        )}
-        {importedBy.isSuccess && !!importedByFilesCount && (
-          <NodeLine
-            icon="ArrowLeftShort"
-            label={`Imported by ${importedByFilesCount} files`}
-            onClick={loadImportedByNodesOnClick}
-          >
-            <HiddenHandle type="source" position={Position.Left} />
-          </NodeLine>
-        )}
-        {importsFrom.isSuccess && !!importsFromCount && (
-          <NodeLine
-            icon="ArrowRightShort"
-            label={`Imports from ${importsFromCount} files`}
-            onClick={loadImportsFromNodesOnClick}
-          >
-            <HiddenHandle type="target" position={Position.Right} />
-          </NodeLine>
-        )}
-      </NodeContainer>
-    </>
+    <NodeContainer $selected={selected}>
+      <FileFlowNodeHeader data={data} selected={selected} />
+      <NodeLine
+        icon="SquircleArrowBottom"
+        label="Project entrypoint"
+        active
+        hidden={!data.isEntrypoint}
+      />
+      <NodeLine
+        icon="ArrowLeftShort"
+        label={`Imported by ${importedByFilesCount} files`}
+        onClick={loadImportedByNodesOnClick}
+      >
+        <HiddenHandle type="source" position={Position.Left} />
+      </NodeLine>
+      <NodeLine
+        icon="ArrowRightShort"
+        label={`Imports from ${importsFromCount} files`}
+        onClick={loadImportsFromNodesOnClick}
+      >
+        <HiddenHandle type="target" position={Position.Right} />
+      </NodeLine>
+    </NodeContainer>
   );
 };
 
@@ -131,6 +148,7 @@ const NodeContainer = styled(FlexColumnLayout)<{ $selected?: boolean }>`
   background: var(--primary-light);
   overflow: hidden;
   max-width: ${cssPx(NODE_WIDTH)};
+  z-index: 3;
 
   outline: 1px solid var(--primary-light);
   box-shadow: var(--shadow-card-elevation-low);

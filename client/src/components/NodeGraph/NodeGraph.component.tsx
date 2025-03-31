@@ -1,21 +1,16 @@
 import { NodeGraphProvider } from "./NodeGraph.provider";
 import { NodeGraphRenderer } from "./NodeGraph.renderer";
-import type {
-  AvailableNodeType,
-  NodeData,
-  NodeGraphProps,
-} from "./NodeGraph.types";
+import type { NodeData, NodeGraphProps } from "./NodeGraph.types";
 
 export const NodeGraph = <
   TNodeId extends number | string,
-  TNodeData extends NodeData<TNodeId>,
-  TNodeType extends AvailableNodeType
+  TNodeData extends NodeData<TNodeId>
 >(
-  props: NodeGraphProps<TNodeId, TNodeData, TNodeType>
+  props: NodeGraphProps<TNodeId, TNodeData>
 ) => {
   return (
     <NodeGraphProvider {...props}>
-      <NodeGraphRenderer<TNodeId, TNodeData, TNodeType> />
+      <NodeGraphRenderer<TNodeId, TNodeData> />
     </NodeGraphProvider>
   );
 };

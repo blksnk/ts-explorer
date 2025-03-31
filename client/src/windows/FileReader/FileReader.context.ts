@@ -1,4 +1,9 @@
-import { isObject, isString, type Nullish } from "@ubloimmo/front-util";
+import {
+  isNumber,
+  isObject,
+  isString,
+  type Nullish,
+} from "@ubloimmo/front-util";
 import { useApi, type FileId } from "../../api";
 import { useQuery } from "@tanstack/react-query";
 import { createContext, useContext, useMemo } from "react";
@@ -8,11 +13,13 @@ export const useFileReaderStore = (id: Nullish<FileId>) => {
   const fileData = useQuery({
     queryKey: api.queryKeys.file.get(id),
     queryFn: () => api.endpoints.file.get(id ?? 0),
+    enabled: isNumber(id),
   });
 
   const fileContent = useQuery({
     queryKey: api.queryKeys.file.content(id),
     queryFn: () => api.endpoints.file.content(id ?? 0),
+    enabled: isNumber(id),
   });
 
   const file = useMemo(() => {

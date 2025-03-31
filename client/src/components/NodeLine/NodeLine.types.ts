@@ -9,6 +9,7 @@ export type NodeLineProps = {
   label: string;
   onClick?: Nullable<VoidFn>;
   children?: ReactNode;
+  hidden?: boolean;
 };
 
 export type NodeLineDefaultProps = Required<NodeLineProps>;

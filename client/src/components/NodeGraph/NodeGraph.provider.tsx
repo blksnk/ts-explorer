@@ -4,7 +4,6 @@ import {
   type NodeGraphContext,
 } from "./NodeGraph.context";
 import type {
-  AvailableNodeType,
   NodeData,
   NodeGraphProviderProps,
   ValidNodeId,
@@ -18,23 +17,16 @@ import type {
  */
 export const NodeGraphProvider = <
   TNodeId extends ValidNodeId,
-  TNodeData extends NodeData<TNodeId>,
-  TNodeType extends AvailableNodeType
+  TNodeData extends NodeData<TNodeId>
 >({
   children,
   ...props
-}: NodeGraphProviderProps<TNodeId, TNodeData, TNodeType>) => {
-  const store = useNodeGraphStore<TNodeId, TNodeData, TNodeType>(props);
+}: NodeGraphProviderProps<TNodeId, TNodeData>) => {
+  const store = useNodeGraphStore<TNodeId, TNodeData>(props);
 
   return (
     <NODE_GRAPH_CONTEXT.Provider
-      value={
-        store as NodeGraphContext<
-          ValidNodeId,
-          NodeData<ValidNodeId>,
-          AvailableNodeType
-        >
-      }
+      value={store as NodeGraphContext<ValidNodeId, NodeData<ValidNodeId>>}
     >
       {children}
     </NODE_GRAPH_CONTEXT.Provider>

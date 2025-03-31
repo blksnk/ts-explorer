@@ -16,6 +16,7 @@ const defaultNodeLineProps: NodeLineDefaultProps = {
   active: false,
   onClick: null,
   children: null,
+  hidden: false,
 };
 
 /**
@@ -29,16 +30,18 @@ const defaultNodeLineProps: NodeLineDefaultProps = {
  * @returns {JSX.Element} The rendered NodeLine component
  */
 export const NodeLine = (props: NodeLineProps) => {
-  const { active, color, icon, label, onClick, children } = useMergedProps(
-    defaultNodeLineProps,
-    props
-  );
+  const { active, color, icon, label, onClick, children, hidden } =
+    useMergedProps(defaultNodeLineProps, props);
   const iconColor = useMemo(() => (active ? color : "gray"), [active, color]);
   const clickable = useMemo(() => isFunction<VoidFn>(onClick), [onClick]);
   const handleClick = useHtmlAttribute(onClick);
 
   return (
-    <NodeLineContainer $clickable={clickable} onClick={handleClick}>
+    <NodeLineContainer
+      $clickable={clickable}
+      $hidden={hidden}
+      onClick={handleClick}
+    >
       <StaticIcon name={icon} color={iconColor} size="xs" />
       <Text size="xs" color="gray-600">
         {label}
@@ -48,7 +51,10 @@ export const NodeLine = (props: NodeLineProps) => {
   );
 };
 
-export const NodeLineContainer = styled.article<{ $clickable?: boolean }>`
+export const NodeLineContainer = styled.article<{
+  $clickable?: boolean;
+  $hidden?: boolean;
+}>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -65,8 +71,9 @@ export const NodeLineContainer = styled.article<{ $clickable?: boolean }>`
     flex: 1;
   }
 
-  ${({ $clickable }) =>
+  ${({ $clickable, $hidden }) =>
     $clickable &&
+    !$hidden &&
     css`
       cursor: pointer;
       &:hover {
@@ -76,5 +83,11 @@ export const NodeLineContainer = styled.article<{ $clickable?: boolean }>`
           color: var(--primary-base);
         }
       }
+    `}
+
+  ${({ $hidden }) =>
+    $hidden &&
+    css`
+      display: none;
     `}
 `;

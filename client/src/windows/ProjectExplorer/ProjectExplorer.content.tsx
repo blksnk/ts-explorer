@@ -4,7 +4,10 @@ import { useCallback } from "react";
 import "@xyflow/react/dist/style.css";
 import { useApi, type ProjectFile } from "../../api";
 import { useProjectDetailsContext } from "../../pages/ProjectDetails/ProjectDetails.context";
-import { GetInitialNodesFn } from "../../components/NodeGraph/NodeGraph.types";
+import {
+  GetInitialNodesFn,
+  type AvailableNodeType,
+} from "../../components/NodeGraph/NodeGraph.types";
 import { isNull, type Nullable } from "@ubloimmo/front-util";
 
 export const ProjectExplorerContent: WindowSlot = () => {
@@ -14,7 +17,7 @@ export const ProjectExplorerContent: WindowSlot = () => {
   const api = useApi();
 
   const getInitialNodes = useCallback<
-    GetInitialNodesFn<number, ProjectFile, "file">
+    GetInitialNodesFn<number, ProjectFile>
   >(async () => {
     if (!id) return [];
     const entryPoints = await api.endpoints.project.entrypoints(id);
@@ -26,8 +29,8 @@ export const ProjectExplorerContent: WindowSlot = () => {
   }, [api.endpoints.project, id]);
 
   const onNodeSelectionChange = useCallback(
-    (fileId: Nullable<number>) => {
-      if (isNull(fileId)) return;
+    (fileId: Nullable<number>, nodeType: Nullable<AvailableNodeType>) => {
+      if (isNull(fileId) || nodeType !== "file") return;
       setSelectedFile(fileId);
     },
     [setSelectedFile]
@@ -35,7 +38,6 @@ export const ProjectExplorerContent: WindowSlot = () => {
 
   return (
     <NodeGraph
-      nodeTypes={["file"]}
       getInitialNodes={getInitialNodes}
       initialEdges={[]}
       onNodeSelectionChange={onNodeSelectionChange}

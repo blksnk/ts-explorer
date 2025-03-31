@@ -7,6 +7,7 @@ import type {
 import type { Edge, Node } from "@xyflow/react";
 import type { customNodes } from "../nodes";
 import type { ReactNode } from "react";
+import type { CustomEdge } from "../edges";
 
 export type ValidNodeId = number | string;
 
@@ -25,12 +26,9 @@ export type NodePosition = {
   y?: number;
 };
 
-export type NodeGraphNodeDefinition<
-  TNodeData extends NodeData<ValidNodeId>,
-  TNodeType extends AvailableNodeType
-> = {
+export type NodeGraphNodeDefinition<TNodeData extends NodeData<ValidNodeId>> = {
   data: TNodeData;
-  type: TNodeType;
+  type: AvailableNodeType;
   position?: NodePosition;
 };
 
@@ -41,39 +39,40 @@ export type NodeGraphEdgeDefinition<TId extends ValidNodeId> = {
 };
 
 export type OnNodeSelectionChangeFn<TId extends ValidNodeId> = VoidFn<
-  [selectedNodeId: Nullable<TId>]
+  [selectedNodeId: Nullable<TId>, selectedNodeType: Nullable<AvailableNodeType>]
 >;
 
 export type GetInitialNodesFn<
   TId extends ValidNodeId,
-  TNodeData extends NodeData<TId>,
-  TNodeType extends AvailableNodeType
-> = MaybeAsyncFn<[], NodeGraphNodeDefinition<TNodeData, TNodeType>[]>;
+  TNodeData extends NodeData<TId>
+> = MaybeAsyncFn<[], NodeGraphNodeDefinition<TNodeData>[]>;
 
 export type NodeGraphProps<
   TNodeId extends number | string,
-  TNodeData extends NodeData<TNodeId>,
-  TNodeType extends AvailableNodeType
+  TNodeData extends NodeData<TNodeId>
 > = {
-  getInitialNodes?: GetInitialNodesFn<TNodeId, TNodeData, TNodeType>;
+  getInitialNodes?: GetInitialNodesFn<TNodeId, TNodeData>;
   initialEdges: NodeGraphEdgeDefinition<TNodeId>[];
-  nodeTypes: TNodeType[];
   onNodeSelectionChange?: OnNodeSelectionChangeFn<TNodeId>;
 };
 
 export type NodeGraphNode<
   TNodeId extends ValidNodeId,
-  TNodeData extends NodeData<TNodeId>,
-  TNodeType extends AvailableNodeType
-> = Node<TNodeData, TNodeType>;
+  TNodeData extends NodeData<TNodeId>
+> = Node<TNodeData, AvailableNodeType>;
 
 // TODO: make this type generic when we'll need to store data on edges
-export type NodeGraphEdge = Edge;
-
+export type NodeGraphEdge = Edge | CustomEdge;
 export type NodeGraphProviderProps<
   TNodeId extends ValidNodeId,
-  TNodeData extends NodeData<TNodeId>,
-  TNodeType extends AvailableNodeType
-> = NodeGraphProps<TNodeId, TNodeData, TNodeType> & {
+  TNodeData extends NodeData<TNodeId>
+> = NodeGraphProps<TNodeId, TNodeData> & {
   children?: ReactNode;
 };
+
+export type NodeGraphNodesMap<
+  TId extends ValidNodeId,
+  TNodeData extends NodeData<TId>
+> = Map<string, NodeGraphNode<TId, TNodeData>>;
+
+export type NodeGraphEdgesMap = Map<string, NodeGraphEdge>;

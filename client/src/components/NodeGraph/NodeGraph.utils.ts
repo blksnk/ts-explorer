@@ -1,11 +1,12 @@
 import type {
   NodeData,
   NodeGraphNode,
-  AvailableNodeType,
   NodeGraphNodeDefinition,
   NodeGraphEdgeDefinition,
   NodeGraphEdge,
   ValidNodeId,
+  NodeGraphNodesMap,
+  NodeGraphEdgesMap,
 } from "./NodeGraph.types";
 
 /**
@@ -15,23 +16,17 @@ import type {
  */
 export const nodeDefinitionToNodeGraphNode = <
   TNodeId extends ValidNodeId,
-  TNodeType extends AvailableNodeType,
   TNodeData extends NodeData<TNodeId>
 >({
   type,
   data,
   position: { x = 0, y = 0 } = {},
-}: NodeGraphNodeDefinition<TNodeData, TNodeType>): NodeGraphNode<
-  TNodeId,
-  TNodeData,
-  TNodeType
-> => {
+}: NodeGraphNodeDefinition<TNodeData>): NodeGraphNode<TNodeId, TNodeData> => {
   return {
     id: String(data.id),
     data,
     position: { x, y },
     type,
-    // origin: [0.5, 0.5],
   };
 };
 
@@ -48,5 +43,32 @@ export const edgeDefinitionToNodeGraphEdge = <TId extends ValidNodeId>(
     id: String(edge.id),
     source: String(edge.source),
     target: String(edge.target),
+    type: "relationship",
   };
+};
+
+/**
+ * Converts an array of node graph nodes to a Map keyed by node ID
+ * @template TNodeId - Type for node ID (number or string)
+ * @template TNodeData - Type for node data extending NodeData<TNodeId>
+ * @template TNodeType - Type for available node types
+ */
+export const nodeGraphNodesToMap = <
+  TNodeId extends ValidNodeId,
+  TNodeData extends NodeData<TNodeId>
+>(
+  nodes: NodeGraphNode<TNodeId, TNodeData>[]
+): NodeGraphNodesMap<TNodeId, TNodeData> => {
+  return new Map(nodes.map((node): [string, typeof node] => [node.id, node]));
+};
+
+/**
+ * Converts an array of node graph edges to a Map keyed by edge ID
+ * @param edges - Array of NodeGraphEdge objects
+ * @returns Map of edges with edge IDs as keys and NodeGraphEdge objects as values
+ */
+export const nodeGraphEdgesToMap = (
+  edges: NodeGraphEdge[]
+): NodeGraphEdgesMap => {
+  return new Map(edges.map((edge): [string, typeof edge] => [edge.id, edge]));
 };
