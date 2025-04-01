@@ -5,7 +5,7 @@
   "verbose": true,
   "adapter": {
     "adapter": "local",
-    "entryPoint": "../../missions/ublo/front/src/main.tsx",
+    "entryPoints": ["../../missions/ublo/front/src/main.tsx"],
     "projectRoot": "../../missions/ublo/front"
   },
   "projectName": "Ublo - admin",

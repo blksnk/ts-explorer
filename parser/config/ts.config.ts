@@ -32,12 +32,16 @@ export const findTsConfigJson = async (
   }
   try {
     const tsConfigFileContent = await bun.file(tsConfigPath).text();
-    const tsConfigObject = ts.parseJsonConfigFileContent(
-      tsConfigFileContent,
+    const tsConfigObject = ts.parseConfigFileTextToJson(
+      tsConfigPath,
+      tsConfigFileContent
+    );
+    const tsConfig = ts.parseJsonConfigFileContent(
+      tsConfigObject.config,
       ts.sys,
       projectRoot
     );
-    return tsConfigObject;
+    return tsConfig;
   } catch (error) {
     logger.error(error, "parseTsConfig");
     return null;
@@ -61,9 +65,10 @@ export const parseTsConfig = async (
       : `./tmp/${adapter.repositorySlug}`);
   const tsConfigPath =
     ts.findConfigFile(projectRoot, ts.sys.fileExists, "tsconfig.json") ?? null;
+  logger.debug(tsConfigPath, "tsConfigPath");
   const tsConfig = await findTsConfigJson(tsConfigPath, projectRoot);
 
-  console.log(tsConfig);
+  logger.debug(tsConfig, "tsConfig");
 
   return {
     tsConfigPath,

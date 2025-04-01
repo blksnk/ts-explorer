@@ -3,7 +3,8 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "run:parse": "bun scripts/local-parse-and-index.ts",
+    "run:parse": "bun scripts/local-parse.ts",
+    "run:parse:index": "bun scripts/local-parse-and-index.ts",
     "run:clear": "bun scripts/clear-project-data.ts",
     "run:delete": "bun scripts/delete-project.ts",
     "serve": "bun server/index.ts",

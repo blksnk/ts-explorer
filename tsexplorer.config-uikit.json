@@ -1,0 +1,13 @@
+{
+  "resolveFileNodes": true,
+  "resolveImportedModules": true,
+  "skipNodeModules": true,
+  "verbose": true,
+  "adapter": {
+    "adapter": "local",
+    "entryPoints": ["../../missions/front-ui/src/index.ts"],
+    "projectRoot": "../../missions/front-ui"
+  },
+  "projectName": "uikit",
+  "projectId": "93748f9a-276f-4dbb-8705-3c5c457a9e54"
+}
