@@ -1,6 +1,5 @@
 import * as ts from "typescript";
-import * as bun from "bun";
-import { hashFile, hashNode, initWorker, workerPromise } from "../utils";
+import { hashNode, initWorker, workerPromise } from "../utils";
 import { Logger, type Nullable, type Optional } from "@ubloimmo/front-util";
 import type {
   ResolverConfig,
@@ -71,10 +70,6 @@ export const resolveImportedModule = (
   return resolved.resolvedModule;
 };
 
-const parseSourceFileWorker = initWorker(
-  new URL("./workers/parseSourceFile.worker.ts", import.meta.url)
-);
-
 /**
  * Parses a source file and returns information about it
  * @param {string} fileName - Path to the file to parse
@@ -93,9 +88,13 @@ export const parseSourceFile = async (
       config: ResolverConfig;
       isEntrypoint?: boolean;
     }
-  >(parseSourceFileWorker, {
-    fileName,
-    config,
-    isEntrypoint,
-  });
+  >(
+    initWorker(new URL("./workers/parseSourceFile.worker.ts", import.meta.url)),
+    {
+      fileName,
+      config,
+      isEntrypoint,
+    },
+    true
+  );
 };

@@ -5,7 +5,12 @@
   "verbose": true,
   "adapter": {
     "adapter": "local",
-    "entryPoints": ["../../missions/ublo/front/src/main.tsx"],
+    "entryPoints": [
+      "../../missions/ublo/front/src/main.tsx",
+      "../../missions/ublo/front/src-tenants/main.tsx",
+      "../../missions/ublo/front/src-copro/main.tsx",
+      "../../missions/ublo/front/src-index/main.tsx"
+    ],
     "projectRoot": "../../missions/ublo/front"
   },
   "projectName": "Ublo - admin",

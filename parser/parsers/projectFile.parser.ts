@@ -48,7 +48,9 @@ export const parseProjectFiles = async (
     uniqueFileHashes.add(sourceFile.hash);
   });
 
-  return new Promise(async (resolveProjectFiles) => {
+  console.log(rootFiles);
+
+  return new Promise(async (resolveProjectFiles, reject) => {
     // init active & pending jobs
     const activeJobs = new Map<number, number>();
     // pendingJobs: jobId -> sourceFile
@@ -59,8 +61,6 @@ export const parseProjectFiles = async (
     const projectFilesMap = new Map<FileHash, ProjectFile>();
     // init next job id
     let nextJobId = pendingJobs.size + 1;
-
-    const queuePromises: Promise<ProjectFile>[] = [];
 
     // init worker pool for parallel parsing
     const workerPool: {
@@ -115,6 +115,7 @@ export const parseProjectFiles = async (
         if (self) {
           self.jobId = null;
         }
+        reject(event.error);
         return;
       };
 

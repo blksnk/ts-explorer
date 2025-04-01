@@ -59,7 +59,6 @@ const declareProjectFile = (
 export const parseProject = async (
   config: CompleteParserConfig<"local">
 ): Promise<ParserMaps> => {
-  logger.info("Begin parsing project...", "parse");
   const start = performance.now();
   const parserMaps = initParserMaps();
   const entryFiles = (
@@ -69,6 +68,7 @@ export const parseProject = async (
       )
     )
   ).filter(isObject as Predicate<SourceFile>);
+  logger.info("Begin parsing project...", "parse");
 
   if (!entryFiles.length) {
     logger.error("Entry files not found, aborting", "parse");

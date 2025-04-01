@@ -95,8 +95,6 @@ self.onmessage = async (
       // declare this new file as parsed
       newFilesMap.set(importedFile.hash, importedFile);
     }
-    // terminate file worker
-    // parseSourceFileWorker.terminate();
     return postResult<ParseSourceFileImportsWorker.WorkerResult>({
       type: "result",
       jobId,
