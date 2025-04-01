@@ -8,7 +8,7 @@ import type {
   SourceFile,
 } from "../types";
 import { parseSourceFile } from "./file.parser";
-import { parseProjectFile } from "./projectFile.parser";
+import { parseProjectFiles } from "./projectFile.parser";
 import { isObject, Logger, type Predicate } from "@ubloimmo/front-util";
 
 const logger = Logger();
@@ -75,18 +75,13 @@ export const parseProject = async (
     return parserMaps;
   }
   const fileHashes = new Set<FileHash>();
-  const uniqueProjectFiles: ProjectFile[] = [];
-  // parse each entry file sequentially
-  for (const entryFile of entryFiles) {
-    logger.log(`Parsing entry file ${entryFile.file.fileName}...`, "parse");
-    const projectFiles = await parseProjectFile(
-      entryFile,
-      config,
-      fileHashes,
-      parserMaps.packages
-    );
-    uniqueProjectFiles.push(...projectFiles);
-  }
+  // parse each entry file in parallel
+  const uniqueProjectFiles = await parseProjectFiles(
+    entryFiles,
+    config,
+    fileHashes,
+    parserMaps.packages
+  );
   uniqueProjectFiles.forEach((projectFile) => {
     declareProjectFile(parserMaps, projectFile);
   });

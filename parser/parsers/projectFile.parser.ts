@@ -1,159 +1,170 @@
 import {
+  isNull,
   isObject,
   type Nullable,
-  type Optional,
   type Predicate,
 } from "@ubloimmo/front-util";
 import type {
   FileHash,
   ResolverConfig,
   ProjectFile,
-  ResolvedModule,
   SourceFile,
   TsConfig,
-  NodePackage,
   NodePackageMap,
-  PackageName,
+  ParseSourceFileImportsWorker,
 } from "../types";
-import { parseSourceFile, resolveImportedModule } from "./file.parser";
 import { Logger } from "@ubloimmo/front-util";
+import { cpus } from "node:os";
+import { initWorker } from "../utils";
+import { mapValues } from "../../indexer/indexer.utils";
 
 const logger = Logger({
-  hideLogs: true,
   hideDebug: true,
 });
-const debugLogger = Logger();
+
+const MAX_WORKERS = Math.max(1, cpus().length - 1);
 
 /**
- * Recursively parses a source file and its imported modules into ProjectFile objects
+ * Parses a source file and its imported modules into ProjectFile objects in parallel
  * @param {Nullable<SourceFile>} sourceFile - The source file to parse, or null
  * @param {Config} config - Configuration object containing parsing options
  * @returns {Promise<ProjectFile[]>} Array of ProjectFile objects containing the source file and its imports
  */
-export const parseProjectFile = async (
-  sourceFile: Nullable<SourceFile>,
+export const parseProjectFiles = async (
+  sourceFiles: Nullable<Nullable<SourceFile>[]>,
   config: ResolverConfig & TsConfig,
   uniqueFileHashes: Set<FileHash>,
   uniquePackages: NodePackageMap
 ): Promise<ProjectFile[]> => {
-  if (!sourceFile) {
+  const rootFiles = (sourceFiles ?? []).filter(
+    isObject as Predicate<SourceFile>
+  );
+  if (!rootFiles.length) {
     return [];
   }
 
-  logger.log(
-    `Parsing project file ${sourceFile.file.fileName}...`,
-    "parseProjectFile"
-  );
-  // add current file to collected hashes to avoid circular dependencies
-  uniqueFileHashes.add(sourceFile.hash);
-  // resolve imported modules names to their full file paths
-  const resolvedModules = sourceFile.info.importedFiles
-    .map(({ fileName }) => resolveImportedModule(sourceFile, fileName, config))
-    .filter(isObject as Predicate<ResolvedModule>);
-  // if no imported modules or disabled, return the source file
-  if (!resolvedModules.length || !config.resolveImportedModules) {
-    return [
-      {
-        sourceFile,
-        imports: [],
-        packageImports: [],
-      },
-    ];
-  }
-  const imports: FileHash[] = [];
-  // store unique package imports
-  const packageImports: Set<PackageName> = new Set();
-  // recursively parse imported files
-  const importedFiles = await Promise.all(
-    resolvedModules.map(async (resolvedModule) => {
-      // register external library imports
-      if (resolvedModule.isExternalLibraryImport) {
-        registerNodePackage: {
-          debugLogger.log(
-            `Registering external library import ${resolvedModule.resolvedFileName}`,
-            "parseProjectFile"
-          );
-          // extract package name and version, break if not found
-          let name = resolvedModule.packageId?.name;
-          const version = resolvedModule.packageId?.version;
-          if (!name || !version) break registerNodePackage;
-          // remove `@types/` from name if present
-          // ex: @types/react -> react
-          name = name.replace(/^@types\//, "");
-          // create package object
-          const packageImport: NodePackage = {
-            name,
-            version,
-          };
-
-          // add package to unique packages if not already present
-          // TODO: determine if this check is necessary, since map keys are unique
-          if (!uniquePackages.has(packageImport.name)) {
-            uniquePackages.set(packageImport.name, packageImport);
-          }
-          // add package to package imports
-          packageImports.add(packageImport.name);
-        }
-
-        // skip external library imports if configured
-        if (config.skipNodeModules) {
-          debugLogger.log(
-            `Skipping external library import ${resolvedModule.resolvedFileName}`,
-            "parseProjectFile"
-          );
-          return [];
-        }
-      }
-      // parse imported file
-      const importedFile = await parseSourceFile(
-        resolvedModule.resolvedFileName,
-        config
-      );
-      // if file is parsed, add it to the imports and check for circular dependencies
-      if (importedFile) {
-        // mark this file as an import of the current file
-        imports.push(importedFile.hash);
-        // if file is already parsed, skip it
-        if (uniqueFileHashes.has(importedFile.hash)) {
-          logger.log(
-            `Skipping already parsed file ${importedFile.file.fileName}`,
-            "parseProjectFile"
-          );
-          return [];
-        }
-        // add imported file to collected hashes to avoid circular dependencies
-        uniqueFileHashes.add(importedFile.hash);
-      }
-      // recursively parse imported file if not already parsed
-      return await parseProjectFile(
-        importedFile,
-        config,
-        uniqueFileHashes,
-        uniquePackages
-      );
-    })
-  );
-
-  // create a map to store the project files
-  let resultMap: Optional<Map<FileHash, ProjectFile>> = new Map();
-
-  // add the source file to the result map
-  resultMap.set(sourceFile.hash, {
-    sourceFile,
-    imports,
-    packageImports: Array.from(packageImports),
+  // add current files to collected hashes to avoid circular dependencies
+  rootFiles.forEach((sourceFile) => {
+    uniqueFileHashes.add(sourceFile.hash);
   });
 
-  // add imported files to result map while ensuring no duplicates
-  for (const importedFile of importedFiles.flat()) {
-    if (!resultMap.has(importedFile.sourceFile.hash)) {
-      resultMap.set(importedFile.sourceFile.hash, importedFile);
+  return new Promise(async (resolveProjectFiles) => {
+    // init active & pending jobs
+    const activeJobs = new Map<number, number>();
+    // pendingJobs: jobId -> sourceFile
+    const pendingJobs = new Map<number, SourceFile>(
+      rootFiles.map((sourceFile, jobId) => [jobId, sourceFile])
+    );
+    // init collected project files
+    const projectFilesMap = new Map<FileHash, ProjectFile>();
+    // init next job id
+    let nextJobId = pendingJobs.size + 1;
+
+    const queuePromises: Promise<ProjectFile>[] = [];
+
+    // init worker pool for parallel parsing
+    const workerPool: {
+      worker: Worker;
+      workerId: number;
+      jobId: Nullable<number>;
+    }[] = [];
+
+    for (let workerId = 0; workerId < MAX_WORKERS; workerId++) {
+      const worker = initWorker(
+        new URL("./workers/parseSourceFileImports.worker.ts", import.meta.url)
+      );
+
+      worker.onmessage = (
+        event: MessageEvent<ParseSourceFileImportsWorker.WorkerResponse>
+      ) => {
+        const { jobId } = event.data;
+        const endJob = () => {
+          workerPool[workerId].jobId = null;
+          activeJobs.delete(jobId);
+          processQueue();
+        };
+
+        if (event.data.type === "error") {
+          logger.error(event.data.error, `jobId: ${jobId}`);
+          endJob();
+          return;
+        }
+        uniqueFileHashes.add(event.data.sourceFile.hash);
+        // store new parsed packages
+        for (const newPackage of event.data.newPackages) {
+          uniquePackages.set(newPackage.name, newPackage);
+        }
+        // store new parsed files and add them to the pending jobs
+        for (const newFile of event.data.newFiles) {
+          uniqueFileHashes.add(newFile.hash);
+          pendingJobs.set(nextJobId++, newFile);
+        }
+
+        // store project file
+        projectFilesMap.set(event.data.sourceFile.hash, {
+          sourceFile: event.data.sourceFile,
+          imports: event.data.fileImports,
+          packageImports: event.data.packageImports,
+        });
+        endJob();
+      };
+
+      worker.onerror = (event: ErrorEvent) => {
+        logger.error(event.error, `workerId: ${workerId}`);
+        const self = workerPool.find(({ workerId: id }) => id === workerId);
+        if (self) {
+          self.jobId = null;
+        }
+        return;
+      };
+
+      workerPool.push({ worker, workerId, jobId: null });
     }
-  }
-  // merge result to array
-  const result = Array.from(resultMap.values());
-  // free memory
-  resultMap = undefined;
-  // return the flattened unique project files
-  return result;
+
+    const finishParsing = () => {
+      logger.info(`Finished parsing ${projectFilesMap.size} files`);
+      logger.log(`terminating ${workerPool.length} workers...`);
+      workerPool.forEach(({ worker }) => worker.terminate());
+      logger.log("workers terminated");
+      resolveProjectFiles(mapValues(projectFilesMap));
+    };
+
+    const processQueue = () => {
+      const idleWorkers = workerPool.filter(({ jobId }) => isNull(jobId));
+      const jobsToProcess = pendingJobs.size;
+      const workersToUse = Math.min(idleWorkers.length, jobsToProcess);
+
+      const jobsToProcessArr = Array.from(pendingJobs.entries());
+
+      logger.log(activeJobs.size, " active jobs");
+      logger.log(pendingJobs.size, "pending jobs");
+
+      if (!pendingJobs.size && !activeJobs.size) {
+        finishParsing();
+        return;
+      }
+
+      for (let workerIndex = 0; workerIndex < workersToUse; workerIndex++) {
+        const { worker, workerId } = idleWorkers[workerIndex];
+        const jobToProcess = jobsToProcessArr.shift();
+        if (!jobToProcess) break;
+        const [jobId, jobSourceFile] = jobToProcess;
+
+        activeJobs.set(jobId, workerId);
+        const jobData: ParseSourceFileImportsWorker.WorkerData = {
+          jobId,
+          sourceFile: jobSourceFile,
+          uniqueFileHashes: Array.from(uniqueFileHashes),
+          uniquePackageNames: Array.from(uniquePackages.keys()),
+          config,
+        };
+        workerPool[workerId].jobId = jobId;
+        logger.log(`Job ${jobId}: dispatched`, `worker ${workerId}`);
+        worker.postMessage(jobData);
+        pendingJobs.delete(jobId);
+      }
+    };
+
+    processQueue();
+  });
 };

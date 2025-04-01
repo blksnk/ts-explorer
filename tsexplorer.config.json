@@ -1,13 +1,13 @@
 {
-  "resolveFileNodes": true,
+  "resolveFileNodes": false,
   "resolveImportedModules": true,
   "skipNodeModules": true,
   "verbose": true,
   "adapter": {
     "adapter": "local",
-    "entryPoints": ["../../missions/front-ui/src/index.ts"],
-    "projectRoot": "../../missions/front-ui"
+    "entryPoints": ["../../missions/ublo/front/src/main.tsx"],
+    "projectRoot": "../../missions/ublo/front"
   },
-  "projectName": "uikit",
-  "projectId": "93748f9a-276f-4dbb-8705-3c5c457a9e54"
+  "projectName": "Ublo - admin",
+  "projectId": "102b30b3-0964-4b3d-bd34-f053478568a9"
 }

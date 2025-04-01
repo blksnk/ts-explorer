@@ -23,9 +23,7 @@ export const visitNode = (
   const isRootFileNode = rootNodeHashes?.has(hash) ?? false;
   const parentHash = isRootFileNode ? null : hashNode(node.parent);
 
-  const result: SourceNode[] = [
-    { node, hash, start, end, text, kind, parentHash },
-  ];
+  const result: SourceNode[] = [{ hash, start, end, text, kind, parentHash }];
   if (!node.getChildCount()) {
     return result;
   }

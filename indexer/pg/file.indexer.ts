@@ -131,7 +131,7 @@ const formatFileInput = (
   projectId: string,
   projectRoot = ""
 ): FileInput => {
-  const fileName = sourceFile.file.fileName;
+  const fileName = sourceFile.fileName;
   const name = fileName.split("/").pop() ?? fileName;
   let path =
     projectRoot.length && fileName.startsWith(projectRoot)

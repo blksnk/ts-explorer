@@ -7,7 +7,6 @@ export type NodeHash = Hash;
 export type PackageName = string;
 
 export type SourceNode = {
-  node: ts.Node;
   hash: NodeHash;
   start: number;
   end: number;
@@ -17,7 +16,7 @@ export type SourceNode = {
 };
 
 export type SourceFile = {
-  file: ts.SourceFile;
+  fileName: string;
   info: ts.PreProcessedFileInfo;
   hash: FileHash;
   nodes: SourceNode[];

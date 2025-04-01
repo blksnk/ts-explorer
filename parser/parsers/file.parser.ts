@@ -1,6 +1,6 @@
 import * as ts from "typescript";
 import * as bun from "bun";
-import { hashFile, hashNode } from "../utils";
+import { hashFile, hashNode, initWorker, workerPromise } from "../utils";
 import { Logger, type Nullable, type Optional } from "@ubloimmo/front-util";
 import type {
   ResolverConfig,
@@ -50,26 +50,30 @@ export const resolveImportedModule = (
     );
     return null;
   }
-  logger.debug(
-    `Resolving imported module ${moduleName}...`,
-    "resolveFileImport"
-  );
+  // logger.debug(
+  //   `Resolving imported module ${moduleName}...`,
+  //   "resolveFileImport"
+  // );
   const resolved = ts.resolveModuleName(
     moduleName,
-    sourceFile.file.fileName,
+    sourceFile.fileName,
     config.tsConfig?.options,
     ts.sys
   );
   if (!resolved.resolvedModule) {
-    logger.debug(`Could not resolve module ${moduleName}`, "resolveFileImport");
+    logger.warn(`Could not resolve module ${moduleName}`, "resolveFileImport");
     return null;
   }
-  logger.debug(
-    `Resolved to ${resolved.resolvedModule.resolvedFileName}`,
-    "resolveFileImport"
-  );
+  // logger.debug(
+  //   `Resolved to ${resolved.resolvedModule.resolvedFileName}`,
+  //   "resolveFileImport"
+  // );
   return resolved.resolvedModule;
 };
+
+const parseSourceFileWorker = initWorker(
+  new URL("./workers/parseSourceFile.worker.ts", import.meta.url)
+);
 
 /**
  * Parses a source file and returns information about it
@@ -82,45 +86,16 @@ export const parseSourceFile = async (
   config: ResolverConfig,
   isEntrypoint: boolean = false
 ): Promise<Nullable<SourceFile>> => {
-  try {
-    // get file handle
-    const fileHandle = bun.file(fileName);
-    // check if file exists
-    const exists = await fileHandle.exists();
-    if (!exists) {
-      logger.warn(`File ${fileName} does not exist`, "getSourceFile");
-      return null;
+  return await workerPromise<
+    Nullable<SourceFile>,
+    {
+      fileName: string;
+      config: ResolverConfig;
+      isEntrypoint?: boolean;
     }
-    // get file content and ensure it's not empty
-    const content = await fileHandle.text();
-    if (!content.length) {
-      logger.debug(`File ${fileName} is empty`, "getSourceFile");
-      return null;
-    }
-    // create source file
-    const file = ts.createSourceFile(
-      fileName,
-      content,
-      ts.ScriptTarget.Latest,
-      true
-    );
-    // preprocess file to get imports
-    const info = ts.preProcessFile(content, true, true);
-    // get hash
-    const hash = hashFile(fileName, content);
-    // get nodes if resolveFileNodes is true
-    const nodes = config?.resolveFileNodes ? getSourceFileNodes(file) : [];
-    // return it
-    return {
-      file,
-      info,
-      hash,
-      nodes,
-      content,
-      isEntrypoint,
-    };
-  } catch (error) {
-    logger.error(error, "getSourceFile");
-    return null;
-  }
+  >(parseSourceFileWorker, {
+    fileName,
+    config,
+    isEntrypoint,
+  });
 };
